@@ -123,7 +123,7 @@ void calibrateSensorCurrent(int sensor, double acceptance) {
   double r[LYNSYN_MAX_SENSORS];
   lynsyn_getInfo(&hwVersion, &bootVersion, &swVersion, r);
 
-  printf("Calibrate sensor %d\n", sensor + 1);
+  printf("Calibrate current sensor %d\n", sensor + 1);
 
   { // current
     char calCurrent[80];
@@ -133,39 +133,29 @@ void calibrateSensorCurrent(int sensor, double acceptance) {
 
     printf("%f ohm shunt resistor gives a maximum current of %fA\n\n", shuntSizeVal, maxCurrentVal);
 
-    ///////////////////////////////////////////////////////////////////////////////
+    double currents[2];
+    currents[0] = maxCurrentVal*0.04;
+    currents[1] = maxCurrentVal*0.96;
+    
+    double calCurrentVal;
 
-    printf("*** Connect a calibration current source with a low value.\n"
-           "This value should be slightly higher than 0, %.4fA would be a good choice.\n"
-           "Do not trust the current source display, use a multimeter to confirm.\n"
-           "Enter measured current:\n", maxCurrentVal*0.04);
-    if(!fgets(calCurrent, 80, stdin)) {
-      printf("I/O error\n");
-      exit(-1);
+    for(int point = 0; point < sizeof(currents)/sizeof(double); point++) {
+
+      printf("*** Connect a calibration current source.\n"
+             "The current should be around %fA.\n"
+             "Do not trust the current source display, use a multimeter to confirm.\n"
+             "Enter measured current:\n", currents[point]);
+      if(!fgets(calCurrent, 80, stdin)) {
+        printf("I/O error\n");
+        exit(-1);
+      }
+
+      calCurrentVal = strtod(calCurrent, NULL);
+
+      printf("Calibrating sensor %d with low calibration current %f\n\n", sensor+1, calCurrentVal);
+
+      lynsyn_adcCalibrateCurrent(sensor, calCurrentVal, maxCurrentVal);
     }
-
-    double calCurrentVal = strtod(calCurrent, NULL);
-
-    printf("Calibrating sensor %d with low calibration current %f\n\n", sensor+1, calCurrentVal);
-
-    lynsyn_adcCalibrateCurrent(sensor, calCurrentVal, maxCurrentVal, false);
-
-    ///////////////////////////////////////////////////////////////////////////////
-
-    printf("*** Connect a calibration current source with a high value.\n"
-           "This value should be slightly less than the max, %.4fA would be a good choice.\n"
-           "Do not trust the current source display, use a multimeter to confirm.\n"
-           "Enter measured current:\n", maxCurrentVal*0.96);
-    if(!fgets(calCurrent, 80, stdin)) {
-      printf("I/O error\n");
-      exit(-1);
-    }
-
-    calCurrentVal = strtod(calCurrent, NULL);
-
-    printf("Calibrating sensor %d with high calibration current %f\n", sensor+1, calCurrentVal);
-
-    lynsyn_adcCalibrateCurrent(sensor, calCurrentVal, maxCurrentVal, true);
 
     ///////////////////////////////////////////////////////////////////////////////
 
@@ -193,41 +183,30 @@ void calibrateSensorVoltage(int sensor, double acceptance) {
 
     double maxVoltageVal = lynsyn_getMaxVoltage();
 
-    printf("This lynsyn has a maximum voltage of %fV\n\n", maxVoltageVal);
+    printf("Calibrate voltage sensor %d\n", sensor + 1);
 
     ///////////////////////////////////////////////////////////////////////////////
 
-    printf("*** Connect a calibration voltage source with a low value.\n"
-           "This value should be slightly higher than 0, %.4fV would be a good choice.\n"
-           "Do not trust the voltage source display, use a multimeter to confirm.\n"
-           "Enter measured voltage:\n", maxVoltageVal*0.04);
-    if(!fgets(calVoltage, 80, stdin)) {
-      printf("I/O error\n");
-      exit(-1);
+    double voltages[3] = {1, 11, 22};
+    double calVoltageVal;
+
+    for(int point = 0; point < sizeof(voltages)/sizeof(double); point++) {
+
+      printf("*** Connect a calibration voltage source.\n"
+             "The voltage should be around %fV.\n"
+             "Do not trust the voltage source display, use a multimeter to confirm.\n"
+             "Enter measured voltage:\n", voltages[point]);
+      if(!fgets(calVoltage, 80, stdin)) {
+        printf("I/O error\n");
+        exit(-1);
+      }
+
+      calVoltageVal = strtod(calVoltage, NULL);
+
+      printf("Calibrating sensor %d with low calibration voltage %f\n\n", sensor+1, calVoltageVal);
+
+      lynsyn_adcCalibrateVoltage(sensor, calVoltageVal, maxVoltageVal);
     }
-
-    double calVoltageVal = strtod(calVoltage, NULL);
-
-    printf("Calibrating sensor %d with low calibration voltage %f\n\n", sensor+1, calVoltageVal);
-
-    lynsyn_adcCalibrateVoltage(sensor, calVoltageVal, maxVoltageVal, false);
-
-    ///////////////////////////////////////////////////////////////////////////////
-
-    printf("*** Connect a calibration voltage source with a high value.\n"
-           "This value should be slightly less than the max, %.4fV would be a good choice.\n"
-           "Do not trust the voltage source display, use a multimeter to confirm.\n"
-           "Enter measured voltage:\n", maxVoltageVal*0.96);
-    if(!fgets(calVoltage, 80, stdin)) {
-      printf("I/O error\n");
-      exit(-1);
-    }
-
-    calVoltageVal = strtod(calVoltage, NULL);
-
-    printf("Calibrating sensor %d with high calibration voltage %f\n", sensor+1, calVoltageVal);
-
-    lynsyn_adcCalibrateVoltage(sensor, calVoltageVal, maxVoltageVal, true);
 
     ///////////////////////////////////////////////////////////////////////////////
 
@@ -269,20 +248,22 @@ void programTest(void) {
   printf("*** Connect the EFM32 starter kit to Lynsyn J5 (Cortex Debug).\n");
   getchar();
 
-  printf("*** Enter boot bin filename\n");
+  printf("*** Enter boot bin filename [fwbin/lynsyn_boot.bin]:\n");
   char bootFilename[80];
   if(!fgets(bootFilename, 80, stdin)) {
     printf("I/O error\n");
     exit(-1);
   }
+  if(bootFilename[0] == '\n') strncpy(bootFilename, "fwbin/lynsyn_boot.bin", 80);
   bootFilename[strcspn(bootFilename, "\n")] = 0;
 
-  printf("*** Enter main bin filename\n");
+  printf("*** Enter main bin filename [fwbin/lynsyn_boot.bin]:\n");
   char mainFilename[80];
   if(!fgets(mainFilename, 80, stdin)) {
     printf("I/O error\n");
     exit(-1);
   }
+  if(mainFilename[0] == '\n') strncpy(mainFilename, "fwbin/lynsyn_main.bin", 80);
   mainFilename[strcspn(mainFilename, "\n")] = 0;
 
   if(!programMcu(bootFilename, mainFilename)) {
@@ -335,6 +316,7 @@ void programTestAndCalibrate(double acceptance) {
   }
 
   printf("Seventh step: Voltage sensor calibration.\n\n");
+  printf("This lynsyn has a maximum voltage of %fV\n\n", lynsyn_getMaxVoltage());
 
   for(int i = 0; i < SENSORS; i++) {
     calibrateSensorVoltage(i, acceptance);
@@ -345,7 +327,7 @@ void programTestAndCalibrate(double acceptance) {
   printf("\nAll tests OK and all calibrations done.\n");
 }
 
-void calSensor(double acceptance) {
+void calCurrentSensor(double acceptance) {
   if(!lynsyn_init()) {
     printf("Can't initialize lynsyn\n");
     exit(-1);
@@ -362,6 +344,28 @@ void calSensor(double acceptance) {
     if((sensor[0] != 'x') && (sensor[0] != 'X'))  {
       int s = strtol(sensor, NULL, 10)-1;
       calibrateSensorCurrent(s, acceptance);
+    }
+  }
+
+  lynsyn_release();
+}
+
+void calVoltageSensor(double acceptance) {
+  if(!lynsyn_init()) {
+    printf("Can't initialize lynsyn\n");
+    exit(-1);
+  }
+
+  char sensor[80] = "";
+
+  while(sensor[0] != 'x') {
+    printf("Which sensor do you want to calibrate ('x' for exit)?\n");
+    if(!fgets(sensor, 80, stdin)) {
+      printf("I/O error\n");
+      exit(-1);
+    }
+    if((sensor[0] != 'x') && (sensor[0] != 'X'))  {
+      int s = strtol(sensor, NULL, 10)-1;
       calibrateSensorVoltage(s, acceptance);
     }
   }
@@ -452,9 +456,10 @@ int main(int argc, char *argv[]) {
     printf("Which procedure do you want to perform?\n");
     printf("Enter '1' for complete programming, test and calibration.\n");
     printf("Enter '2' for only current sensor calibration\n");
-    printf("Enter '3' for live measurements\n");
-    printf("Enter '4' for USB firmware upgrade\n");
-    printf("Enter '5' for complete programming and testing, excluding calibration.\n");
+    printf("Enter '3' for only voltage sensor calibration\n");
+    printf("Enter '4' for live measurements\n");
+    printf("Enter '5' for USB firmware upgrade\n");
+    printf("Enter '6' for complete programming and testing, excluding calibration.\n");
     if(!fgets(choiceBuf, 80, stdin)) {
       printf("I/O error\n");
       exit(-1);
@@ -477,24 +482,31 @@ int main(int argc, char *argv[]) {
       printf("*** Connect Lynsyn to the PC USB port.\n");
       getchar();
 
-      calSensor(arguments.acceptance);
+      calCurrentSensor(arguments.acceptance);
       break;
 
     case 3:
       printf("*** Connect Lynsyn to the PC USB port.\n");
       getchar();
 
-      live();
+      calVoltageSensor(arguments.acceptance);
       break;
 
     case 4:
       printf("*** Connect Lynsyn to the PC USB port.\n");
       getchar();
 
-      //lynsyn_usbFirmwareUpgrade();
+      live();
       break;
 
     case 5:
+      printf("*** Connect Lynsyn to the PC USB port.\n");
+      getchar();
+
+      //lynsyn_usbFirmwareUpgrade();
+      break;
+
+    case 6:
       printf("This procedure programs and tests the Lynsyn board.\n"
              "All lines starting with '***' requires you to do a certain action, and then press enter to continue.\n\n");
 

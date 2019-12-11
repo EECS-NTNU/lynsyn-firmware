@@ -52,8 +52,9 @@ static struct SampleReplyPacket sample;
 static uint32_t upgradeCrc;
 static uint32_t flashPackageCounter;
 
-static uint32_t lowWanted[SENSORS];
-static uint32_t lowActual[SENSORS];
+static unsigned pointNum[CHANNELS];
+static double lastWanted[CHANNELS];
+static double lastActual[CHANNELS];
 
 uint8_t inBuffer[MAX_PACKET_SIZE + 3];
 
@@ -125,6 +126,10 @@ static void sendBuf(void *outBuffer, int length) {
 ///////////////////////////////////////////////////////////////////////////////
 
 static void sendInitReply(void) {
+  for(int i = 0; i < CHANNELS; i++) {
+    pointNum[i] = 0;
+  }
+
   initReply.hwVersion = getUint32("hwver");
   initReply.swVersion = SW_VERSION;
   initReply.sensors = SENSORS;
@@ -175,21 +180,21 @@ static void hwInit(struct HwInitRequestPacket *hwInitReq) {
   setDouble("r6", hwInitReq->r[6]);
 
 #else
-  setDouble("offsetc0", 0);
-  setDouble("offsetc1", 0);
-  setDouble("offsetc2", 0);
+  setDouble("offc00", 0);
+  setDouble("offc10", 0);
+  setDouble("offc20", 0);
 
-  setDouble("gainc0", 1);
-  setDouble("gainc1", 1);
-  setDouble("gainc2", 1);
+  setDouble("gainc00", 1);
+  setDouble("gainc10", 1);
+  setDouble("gainc20", 1);
 
-  setDouble("offsetv0", 0);
-  setDouble("offsetv1", 0);
-  setDouble("offsetv2", 0);
+  setDouble("offv00", 0);
+  setDouble("offv10", 0);
+  setDouble("offv20", 0);
 
-  setDouble("gainv0", 1);
-  setDouble("gainv1", 1);
-  setDouble("gainv2", 1);
+  setDouble("gainv00", 1);
+  setDouble("gainv10", 1);
+  setDouble("gainv20", 1);
 
   setDouble("r0", hwInitReq->r[0]);
   setDouble("r1", hwInitReq->r[1]);
@@ -412,81 +417,75 @@ static void calibrate(struct CalibrateRequestPacket *cal) {
   }
   channelAvg /= CAL_AVERAGE_SAMPLES;
         
-  if(cal->flags & CALREQ_FLAG_HIGH) {
-    uint32_t highWanted = cal->calVal >> 1;
-    uint32_t highActual = channelAvg;
+  double wanted = cal->calVal / 2.0;
+  double actual = channelAvg;
 
-    double slope = ((double)highActual - (double)lowActual[cal->channel]) / ((double)highWanted - (double)lowWanted[cal->channel]);
-    double offset = (double)highActual - slope * (double)highWanted;
+  double slope = (actual - lastActual[cal->channel]) / (wanted - lastWanted[cal->channel]);
+  double offset = actual - slope * wanted;
 
-    double gain = 1 / slope;
+  double gain = 1 / slope;
 
-    printf("Calibrating ADC channel %d (offset %f gain %f)\n", cal->channel, offset, gain);
+  lastWanted[cal->channel] = wanted;
+  lastActual[cal->channel] = actual;
+
+  if(pointNum[cal->channel] > 0) {
+    printf("Calibrating ADC channel %d (offset %f gain %f) point %d\n", cal->channel, offset, gain, pointNum[cal->channel]);
+
+    char configName[9];
 
 #ifdef VERSION2
-    switch(cal->channel) {
-      case 0:
-        setDouble("offset0", offset);
-        setDouble("gain0", gain);
-        break;
-      case 1:
-        setDouble("offset1", offset);
-        setDouble("gain1", gain);
-        break;
-      case 2:
-        setDouble("offset2", offset);
-        setDouble("gain2", gain);
-        break;
-      case 3:
-        setDouble("offset3", offset);
-        setDouble("gain3", gain);
-        break;
-      case 4:
-        setDouble("offset4", offset);
-        setDouble("gain4", gain);
-        break;
-      case 5:
-        setDouble("offset5", offset);
-        setDouble("gain5", gain);
-      case 6:
-        setDouble("offset6", offset);
-        setDouble("gain6", gain);
-        break;
+    if(pointNum[cal->channel] == 1) {
+      snprintf(configName, 9, "offset%d", cal->channel);
+      setDouble(configName, offset);
+
+      snprintf(configName, 9, "gain%d", cal->channel);
+      setDouble(configName, gain);
     }
 
 #else
+    unsigned sensor = 9;
+    char type = 'x';
+
     switch(cal->channel) {
       case 0:
-        setDouble("offsetc2", offset);
-        setDouble("gainc2", gain);
+        sensor = 2;
+        type = 'c';
         break;
       case 1:
-        setDouble("offsetv2", offset);
-        setDouble("gainv2", gain);
+        sensor = 2;
+        type = 'v';
         break;
       case 2:
-        setDouble("offsetc1", offset);
-        setDouble("gainc1", gain);
+        sensor = 1;
+        type = 'c';
         break;
       case 3:
-        setDouble("offsetv1", offset);
-        setDouble("gainv1", gain);
+        sensor = 1;
+        type = 'v';
         break;
       case 4:
-        setDouble("offsetc0", offset);
-        setDouble("gainc0", gain);
+        sensor = 0;
+        type = 'c';
         break;
       case 5:
-        setDouble("offsetv0", offset);
-        setDouble("gainv0", gain);
+        sensor = 0;
+        type = 'v';
         break;
     }
+
+    snprintf(configName, 9, "off%c%d%d", type, sensor, pointNum[cal->channel]-1);
+    setDouble(configName, offset);
+
+    snprintf(configName, 9, "gain%c%d%d", type, sensor, pointNum[cal->channel]-1);
+    setDouble(configName, gain);
+
+    snprintf(configName, 9, "point%c%d%d", type, sensor, pointNum[cal->channel]-1);
+    setInt16(configName, (int16_t)channelAvg);
 #endif
 
-  } else {
-    lowWanted[cal->channel] = cal->calVal >> 1;
-    lowActual[cal->channel] = channelAvg;
   }
+
+  pointNum[cal->channel]++;
 }
 
 static void calSet(struct CalSetRequestPacket *cal) {
@@ -600,21 +599,29 @@ static int initSent(USB_Status_TypeDef status, uint32_t xf, uint32_t remaining) 
   (void)remaining;
 
 #ifdef VERSION2
-  calInfo.offsetCurrent[0] = getDouble("offset0");
-  calInfo.offsetCurrent[1] = getDouble("offset1");
-  calInfo.offsetCurrent[2] = getDouble("offset2");
-  calInfo.offsetCurrent[3] = getDouble("offset3");
-  calInfo.offsetCurrent[4] = getDouble("offset4");
-  calInfo.offsetCurrent[5] = getDouble("offset5");
-  calInfo.offsetCurrent[6] = getDouble("offset6");
+  calInfo.offsetCurrent[0][0] = getDouble("offset0");
+  calInfo.offsetCurrent[1][0] = getDouble("offset1");
+  calInfo.offsetCurrent[2][0] = getDouble("offset2");
+  calInfo.offsetCurrent[3][0] = getDouble("offset3");
+  calInfo.offsetCurrent[4][0] = getDouble("offset4");
+  calInfo.offsetCurrent[5][0] = getDouble("offset5");
+  calInfo.offsetCurrent[6][0] = getDouble("offset6");
 
-  calInfo.gainCurrent[0] = getDouble("gain0");
-  calInfo.gainCurrent[1] = getDouble("gain1");
-  calInfo.gainCurrent[2] = getDouble("gain2");
-  calInfo.gainCurrent[3] = getDouble("gain3");
-  calInfo.gainCurrent[4] = getDouble("gain4");
-  calInfo.gainCurrent[5] = getDouble("gain5");
-  calInfo.gainCurrent[6] = getDouble("gain6");
+  calInfo.gainCurrent[0][0] = getDouble("gain0");
+  calInfo.gainCurrent[1][0] = getDouble("gain1");
+  calInfo.gainCurrent[2][0] = getDouble("gain2");
+  calInfo.gainCurrent[3][0] = getDouble("gain3");
+  calInfo.gainCurrent[4][0] = getDouble("gain4");
+  calInfo.gainCurrent[5][0] = getDouble("gain5");
+  calInfo.gainCurrent[6][0] = getDouble("gain6");
+
+  calInfo.pointCurrent[0][0] = 0;
+  calInfo.pointCurrent[1][0] = 0;
+  calInfo.pointCurrent[2][0] = 0;
+  calInfo.pointCurrent[3][0] = 0;
+  calInfo.pointCurrent[4][0] = 0;
+  calInfo.pointCurrent[5][0] = 0;
+  calInfo.pointCurrent[6][0] = 0;
 
   if(configExists("r0")) calInfo.r[0] = getDouble("r0"); else calInfo.r[0] = 0.025;
   if(configExists("r1")) calInfo.r[1] = getDouble("r1"); else calInfo.r[1] = 0.05;
@@ -625,21 +632,49 @@ static int initSent(USB_Status_TypeDef status, uint32_t xf, uint32_t remaining) 
   if(configExists("r6")) calInfo.r[6] = getDouble("r6"); else calInfo.r[6] = 10;
   
 #else
-  calInfo.offsetCurrent[0] = getDouble("offsetc0");
-  calInfo.offsetCurrent[1] = getDouble("offsetc1");
-  calInfo.offsetCurrent[2] = getDouble("offsetc2");
+  char configName[9];
 
-  calInfo.offsetVoltage[0] = getDouble("offsetv0");
-  calInfo.offsetVoltage[1] = getDouble("offsetv1");
-  calInfo.offsetVoltage[2] = getDouble("offsetv2");
+  for(int sensor = 0; sensor < MAX_SENSORS; sensor++) {
+    calInfo.currentPoints[sensor] = 0;
+    calInfo.voltagePoints[sensor] = 0;
 
-  calInfo.gainCurrent[0] = getDouble("gainc0");
-  calInfo.gainCurrent[1] = getDouble("gainc1");
-  calInfo.gainCurrent[2] = getDouble("gainc2");
+    for(int pointNum = 0; pointNum < MAX_POINTS; pointNum++) {
+      snprintf(configName, 9, "offc%d%d", sensor, pointNum);
+      if(configExists(configName)) {
+        calInfo.offsetCurrent[sensor][pointNum] = getDouble(configName);
 
-  calInfo.gainVoltage[0] = getDouble("gainv0");
-  calInfo.gainVoltage[1] = getDouble("gainv1");
-  calInfo.gainVoltage[2] = getDouble("gainv2");
+        snprintf(configName, 9, "gainc%d%d", sensor, pointNum);
+        calInfo.gainCurrent[sensor][pointNum] = getDouble(configName);
+      
+        snprintf(configName, 9, "pointc%d%d", sensor, pointNum);
+        calInfo.pointCurrent[sensor][pointNum] = getInt16(configName);
+
+        calInfo.currentPoints[sensor]++;
+      } else {
+        calInfo.offsetCurrent[sensor][pointNum] = 0;
+        break;
+      }
+    }
+
+    for(int pointNum = 0; pointNum < MAX_POINTS; pointNum++) {
+      snprintf(configName, 9, "offv%d%d", sensor, pointNum);
+      if(configExists(configName)) {
+        calInfo.offsetVoltage[sensor][pointNum] = getDouble(configName);
+
+        snprintf(configName, 9, "gainv%d%d", sensor, pointNum);
+        calInfo.gainVoltage[sensor][pointNum] = getDouble(configName);
+      
+        snprintf(configName, 9, "pointv%d%d", sensor, pointNum);
+        calInfo.pointVoltage[sensor][pointNum] = getInt16(configName);
+
+        calInfo.voltagePoints[sensor]++;
+      } else {
+        calInfo.offsetVoltage[sensor][pointNum] = 0;
+        break;
+      }
+
+    }
+  }
 
   calInfo.r[0] = getDouble("r0");
   calInfo.r[1] = getDouble("r1");

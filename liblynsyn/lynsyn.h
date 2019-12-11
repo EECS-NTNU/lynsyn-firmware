@@ -165,16 +165,16 @@ bool lynsyn_firmwareUpgrade(int size, uint8_t *buf);
 bool lynsyn_cleanNonVolatile(uint8_t hwVersion, double *r);
 
 /** Calibrate current sensor */
-void lynsyn_adcCalibrateCurrent(uint8_t sensor, double current, double maxCurrent, bool high);
+void lynsyn_adcCalibrateCurrent(uint8_t sensor, double current, double maxCurrent);
 
 /** Calibrate voltage sensor */
-void lynsyn_adcCalibrateVoltage(uint8_t sensor, double current, double maxCurrent, bool high);
+void lynsyn_adcCalibrateVoltage(uint8_t sensor, double current, double maxCurrent);
 
 /** Set calibration value */
 bool lynsyn_calSet(uint8_t sensor, double offset, double gain);
 
-/** Set calibration value */
-bool lynsyn_calGet(uint8_t sensor, double *offsetCurrent, double *gainCurrent, double *offsetVoltage, double *gainVoltage);
+/** Get calibration value */
+bool lynsyn_calGet(struct CalInfoPacket *calInfo);
 
 /*****************************************************************************/
 /* Tests */

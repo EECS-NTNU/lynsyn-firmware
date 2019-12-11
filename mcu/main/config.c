@@ -35,7 +35,8 @@ struct configLine {
   char id[ID_SIZE];
   union {
     char value[VALUE_SIZE];
-    uint32_t intValue;
+    uint32_t uint32Value;
+    int16_t int16Value;
     double doubleValue;
   };
 };
@@ -89,10 +90,18 @@ bool configExists(char *id) {
   return getLine(id);
 }
 
+int16_t getInt16(char *id) {
+  struct configLine *line = getLine(id);
+  if(line) {
+    return line->int16Value;
+  }
+  return 0;
+}
+
 uint32_t getUint32(char *id) {
   struct configLine *line = getLine(id);
   if(line) {
-    return line->intValue;
+    return line->uint32Value;
   }
   return 0;
 }
@@ -111,6 +120,20 @@ char *getString(char *id) {
   return 0;
 }
 
+void setInt16(char *id, int16_t val) {
+  if(strlen(id) > ID_SIZE) panic("Config id length");
+
+  struct configLine *line = getLine(id);
+
+  if(!line) line = getFreeLine();
+
+  if(line) {
+    strcpy(line->id, id);
+    line->int16Value = val;
+    flushConfig();
+  }
+}
+
 void setUint32(char *id, uint32_t val) {
   if(strlen(id) > ID_SIZE) panic("Config id length");
 
@@ -120,7 +143,7 @@ void setUint32(char *id, uint32_t val) {
 
   if(line) {
     strcpy(line->id, id);
-    line->intValue = val;
+    line->uint32Value = val;
     flushConfig();
   }
 }

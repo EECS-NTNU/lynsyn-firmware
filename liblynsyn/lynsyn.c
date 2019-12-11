@@ -43,11 +43,8 @@ unsigned samplesLeft;
 struct SampleReplyPacket *buf;
 
 struct SampleReplyPacket *sampleBuf;
-double offsetCurrent[MAX_SENSORS];
-double gainCurrent[MAX_SENSORS];
-double offsetVoltage[MAX_SENSORS];
-double gainVoltage[MAX_SENSORS];
-double rs[MAX_SENSORS];
+
+struct CalInfoPacket calInfo;
 
 struct libusb_device_handle *lynsynHandle;
 uint8_t outEndpoint;
@@ -162,28 +159,7 @@ bool lynsyn_postinit(void) {
     return false;
   }
 
-  {
-    struct CalInfoPacket calInfo;
-    getBytes((uint8_t*)&calInfo, sizeof(struct CalInfoPacket), 0);
-    for(unsigned i = 0; i < MAX_SENSORS; i++) {
-      /* if((calInfo.gainCurrent[i] < 0.8) || (calInfo.gainCurrent[i] > 1.2)) { */
-      /*   printf("Suspect calibration values\n"); */
-      /*   return false; */
-      /* } */
-      /* if((calInfo.gainVoltage[i] < 0.8) || (calInfo.gainVoltage[i] > 1.2)) { */
-      /*   printf("Suspect calibration values\n"); */
-      /*   return false; */
-      /* } */
-      offsetCurrent[i] = calInfo.offsetCurrent[i];
-      gainCurrent[i] = calInfo.gainCurrent[i];
-      rs[i] = calInfo.r[i];
-
-      offsetVoltage[i] = calInfo.offsetVoltage[i];
-      gainVoltage[i] = calInfo.gainVoltage[i];
-
-      rs[i] = calInfo.r[i];
-    }
-  }
+  getBytes((uint8_t*)&calInfo, sizeof(struct CalInfoPacket), 0);
 
   return true;
 }
@@ -226,7 +202,7 @@ bool lynsyn_getInfo(uint8_t *hwVersion, uint8_t *bootVersion, uint8_t *swVersion
   *bootVersion = bootVer;
   *swVersion = swVer;
   for(int i = 0; i < LYNSYN_MAX_SENSORS; i++) {
-    r[i] = rs[i];
+    r[i] = calInfo.r[i];
   }
   return true;
 }
@@ -331,21 +307,19 @@ void lynsyn_setLed(bool on) {
   return;
 }
 
-void lynsyn_adcCalibrateCurrent(uint8_t sensor, double current, double maxCurrent, bool high) {
+void lynsyn_adcCalibrateCurrent(uint8_t sensor, double current, double maxCurrent) {
   struct CalibrateRequestPacket req;
   req.request.cmd = USB_CMD_CAL;
   req.channel = getCurrentChannel(sensor);
   req.calVal = (current / maxCurrent) * 0xffd0;
-  req.flags = (high ? CALREQ_FLAG_HIGH : CALREQ_FLAG_LOW);
   sendBytes((uint8_t*)&req, sizeof(struct CalibrateRequestPacket));
 }
 
-void lynsyn_adcCalibrateVoltage(uint8_t sensor, double voltage, double maxVoltage, bool high) {
+void lynsyn_adcCalibrateVoltage(uint8_t sensor, double voltage, double maxVoltage) {
   struct CalibrateRequestPacket req;
   req.request.cmd = USB_CMD_CAL;
   req.channel = getVoltageChannel(sensor);
   req.calVal = (voltage / maxVoltage) * 0xffd0;
-  req.flags = (high ? CALREQ_FLAG_HIGH : CALREQ_FLAG_LOW);
   sendBytes((uint8_t*)&req, sizeof(struct CalibrateRequestPacket));
 }
 
@@ -369,21 +343,14 @@ bool lynsyn_calSetVoltage(uint8_t sensor, double offset, double gain) {
   return true;
 }
 
-bool lynsyn_calGet(uint8_t sensor, double *offsetCurrent, double *gainCurrent, double *offsetVoltage, double *gainVoltage) {
+bool lynsyn_calGet(struct CalInfoPacket *calInfo) {
   struct RequestPacket initRequest;
   initRequest.cmd = USB_CMD_INIT;
   sendBytes((uint8_t*)&initRequest, sizeof(struct RequestPacket));
 
   struct InitReplyPacket initReply;
   getBytes((uint8_t*)&initReply, sizeof(struct InitReplyPacket), 0);
-  struct CalInfoPacket calInfo;
-  getBytes((uint8_t*)&calInfo, sizeof(struct CalInfoPacket), 0);
-
-  *offsetCurrent = calInfo.offsetCurrent[sensor];
-  *gainCurrent = calInfo.gainCurrent[sensor];
-
-  *offsetVoltage = calInfo.offsetVoltage[sensor];
-  *gainVoltage = calInfo.gainVoltage[sensor];
+  getBytes((uint8_t*)calInfo, sizeof(struct CalInfoPacket), 0);
 
   return true;
 }
@@ -393,8 +360,9 @@ bool lynsyn_testAdcCurrent(unsigned sensor, double val, double acceptance) {
     return false;
   }
 
-  if((gainCurrent[sensor] < 0.8) || (gainCurrent[sensor] > 1.2)) {
-    return false;
+  printf("Current points: %d\n", calInfo.currentPoints[sensor]);
+  for(int i = 0; i < calInfo.currentPoints[sensor]; i++) {
+    printf("Offset %f Gain %f Point %d\n", calInfo.offsetCurrent[0][i], calInfo.gainCurrent[0][i], calInfo.pointCurrent[0][i]);
   }
 
   struct LynsynSample sample;
@@ -414,8 +382,9 @@ bool lynsyn_testAdcVoltage(unsigned sensor, double val, double acceptance) {
     return false;
   }
 
-  if((gainVoltage[sensor] < 0.8) || (gainVoltage[sensor] > 1.2)) {
-    return false;
+  printf("Voltage points: %d\n", calInfo.voltagePoints[sensor]);
+  for(int i = 0; i < calInfo.voltagePoints[sensor]; i++) {
+    printf("Offset %f Gain %f Point %d\n", calInfo.offsetVoltage[0][i], calInfo.gainVoltage[0][i], calInfo.pointVoltage[0][i]);
   }
 
   struct LynsynSample sample;
@@ -424,6 +393,7 @@ bool lynsyn_testAdcVoltage(unsigned sensor, double val, double acceptance) {
   }
 
   if((sample.voltage[sensor] < (val * (1 - acceptance))) || (sample.voltage[sensor] > (val * (1 + acceptance)))) {
+    printf("Error: measured value %f != expected value %f\n", sample.voltage[sensor], val);
     return false;
   }
 
@@ -732,25 +702,41 @@ bool lynsyn_trst(uint8_t val) {
 ///////////////////////////////////////////////////////////////////////////////
 
 double getCurrent(int16_t current, int sensor) {
+  int point;
+  for(point = 0; point < (calInfo.currentPoints[sensor]-1); point++) {
+    if(current < calInfo.pointCurrent[sensor][point]) break;
+  }
+
   double v;
   double vs;
   double i;
 
+  double offset = calInfo.offsetCurrent[sensor][point];
+  double gain = calInfo.gainCurrent[sensor][point];
+
+  v = (((double)current-offset) * (double)LYNSYN_REF_VOLTAGE / (double)LYNSYN_MAX_SENSOR_VALUE) * gain;
+
   if(hwVer == HW_VERSION_3_0) {
-    v = (((double)current-offsetCurrent[sensor]) * (double)LYNSYN_REF_VOLTAGE / (double)LYNSYN_MAX_SENSOR_VALUE) * gainCurrent[sensor];
     vs = v / CURRENT_SENSOR_GAIN;
-    i = vs / rs[sensor];
   } else {
-    v = (((double)current-offsetCurrent[sensor]) * (double)LYNSYN_REF_VOLTAGE / (double)LYNSYN_MAX_SENSOR_VALUE) * gainCurrent[sensor];
     vs = v / CURRENT_SENSOR_GAIN_V2;
-    i = vs / rs[sensor];
   }
+
+  i = vs / calInfo.r[sensor];
 
   return i;
 }
 
 double getVoltage(int16_t voltage, int sensor) {
-  double v = (((double)voltage-offsetVoltage[sensor]) * (double)LYNSYN_REF_VOLTAGE / (double)LYNSYN_MAX_SENSOR_VALUE) * gainVoltage[sensor];
+  int point;
+  for(point = 0; point < (calInfo.voltagePoints[sensor]-1); point++) {
+    if(voltage < calInfo.pointVoltage[sensor][point]) break;
+  }
+
+  double offset = calInfo.offsetVoltage[sensor][point];
+  double gain = calInfo.gainVoltage[sensor][point];
+
+  double v = (((double)voltage-offset) * (double)LYNSYN_REF_VOLTAGE / (double)LYNSYN_MAX_SENSOR_VALUE) * gain;
   return v * (VOLTAGE_DIVIDER_R1 + VOLTAGE_DIVIDER_R2) / VOLTAGE_DIVIDER_R2;
 }
 

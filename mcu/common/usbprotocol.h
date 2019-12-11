@@ -83,9 +83,6 @@
 #define SAMPLE_REPLY_FLAG_HALTED     0x02
 #define SAMPLE_REPLY_FLAG_INVALID    0x04
 
-#define CALREQ_FLAG_LOW  1
-#define CALREQ_FLAG_HIGH 2
-
 #define FLASH_BUFFER_SIZE 64
 #define SHIFT_BUFFER_SIZE 1024
 
@@ -94,6 +91,7 @@
 #define MAX_SAMPLES 32
 #define MAX_CORES 4
 #define MAX_SENSORS 7
+#define MAX_POINTS 4
 #define CHANNELS 7
 #define MAX_PACKET_SIZE (sizeof(struct ShiftRequestPacket))
 
@@ -198,10 +196,16 @@ struct InitReplyPacket {
 };
 
 struct CalInfoPacket {
-  double offsetCurrent[MAX_SENSORS];
-  double gainCurrent[MAX_SENSORS];
-  double offsetVoltage[MAX_SENSORS];
-  double gainVoltage[MAX_SENSORS];
+  uint8_t currentPoints[MAX_SENSORS];
+  double offsetCurrent[MAX_SENSORS][MAX_POINTS];
+  double gainCurrent[MAX_SENSORS][MAX_POINTS];
+  int16_t pointCurrent[MAX_SENSORS][MAX_POINTS];
+
+  uint8_t voltagePoints[MAX_SENSORS];
+  double offsetVoltage[MAX_SENSORS][MAX_POINTS];
+  double gainVoltage[MAX_SENSORS][MAX_POINTS];
+  int16_t pointVoltage[MAX_SENSORS][MAX_POINTS];
+
   double r[MAX_SENSORS];
 };
 

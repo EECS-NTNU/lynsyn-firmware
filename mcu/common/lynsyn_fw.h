@@ -36,7 +36,11 @@
 #include "em_system.h"
 #include "em_chip.h"
  
+#ifdef VERSION2
+#define SENSORS 7
+#else
 #define SENSORS 3
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 //  flash layout

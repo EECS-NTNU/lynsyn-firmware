@@ -33,9 +33,11 @@
 void configInit(void);
 void clearConfig(void);
 bool configExists(char *id);
+int16_t getInt16(char *id);
 uint32_t getUint32(char *id);
 double getDouble(char *id);
 char *getString(char *id);
+void setInt16(char *id, int16_t val);
 void setUint32(char *id, uint32_t val);
 void setDouble(char *id, double val);
 void setString(char *id, char *s);
