@@ -11,10 +11,19 @@ export TOOLCHAIN=/opt/SimplicityStudio_v4/developer/toolchains/gnu_arm/7.2_2017q
 
 # Uncomment one of the following for the HW version you are compiling firmware for:
 
-#export HW=2 # lynsyn original
-export HW=3 # lynsyn lite
+# compile for lynsyn original
+#export HW=2
+
+# compile for lynsyn lite
+export HW=3
 
 ###############################################################################
+
+ifeq ($(HW),2)
+alldeps=host_software firmware synthesis
+else
+alldeps=host_software firmware
+endif
 
 .PHONY: host_software
 host_software:
@@ -31,6 +40,9 @@ host_software:
 	cd lynsyn_viewer/build && $(QMAKE) ..
 	cd lynsyn_viewer/build && $(MAKE)
 	cp lynsyn_viewer/build/lynsyn_viewer bin
+	@echo
+	@echo "Host software compilation successful"
+	@echo
 
 .PHONY: firmware
 firmware:
@@ -39,14 +51,29 @@ firmware:
 	cp mcu/boot/lynsyn_boot.bin fwbin
 	cd mcu/main && $(MAKE)
 	cp mcu/main/lynsyn_main.bin fwbin
+	@echo
+	@echo "Firmware compilation successful"
+	@echo
+
+.PHONY: synthesis
+synthesis:
+	mkdir -p fwbin
+	cd fpga && $(MAKE)
+	cp build/lynsyn.mcs fwbin
+	@echo
+	@echo "FPGA synthesis successful"
+	@echo
 
 .PHONY: all
-all: host_software firmware
+all: $(alldeps)
 
 .PHONY: install
 install: host_software install_hw
 	cp bin/* /usr/bin/
 	cp .jtagdevices /etc/jtagdevices
+	@echo
+	@echo "Software and hardware installed"
+	@echo
 
 .PHONY: install_hw
 install_hw:
