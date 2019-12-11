@@ -36,11 +36,13 @@
 
 #include "lynsyn.h"
 
-#define SENSORS 3
+#define SENSORS_BOARD_2 7
+#define SENSORS_BOARD_3 3
 
 ///////////////////////////////////////////////////////////////////////////////
 
-double rsDefault[SENSORS] = {0.025, 0.05, 0.1};
+double rsDefault3[SENSORS_BOARD_3] = {0.025, 0.05, 0.1};
+double rsDefault2[SENSORS_BOARD_2] = {0.025, 0.05, 0.05, 0.1, 0.1, 1, 10};
 unsigned hwVersion = HW_VERSION_3_0;
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -78,7 +80,15 @@ bool cleanNonVolatile(void) {
   double rs[LYNSYN_MAX_SENSORS];
   char text[80];
 
-  for(int i = 0; i < SENSORS; i++) {
+  int sensors = SENSORS_BOARD_3;
+  double *rsDefault =rsDefault3;
+
+  if(hwVersion == HW_VERSION_2_2) {
+    sensors = SENSORS_BOARD_2;
+    rsDefault = rsDefault2;
+  }
+      
+  for(int i = 0; i < sensors; i++) {
     printf("*** Enter Rs%d [%f ohm]: ", i+1, rsDefault[i]);
     if(!fgets(text, 80, stdin)) {
       printf("I/O error\n");
@@ -88,7 +98,12 @@ bool cleanNonVolatile(void) {
     else rs[i] = strtod(text, NULL);
   }
 
-  printf("Initializing HW %x with Rs %f %f %f\n", hwVersion, rs[0], rs[1], rs[2]);
+  printf("Initializing HW %x with Rs", hwVersion);
+  for(int i = 0; i < sensors; i++) {
+    printf( " %f", rs[i]);
+  }
+  printf("\n");
+
   return lynsyn_cleanNonVolatile(hwVersion, rs);
 }
 
@@ -152,7 +167,7 @@ void calibrateSensorCurrent(int sensor, double acceptance) {
 
       calCurrentVal = strtod(calCurrent, NULL);
 
-      printf("Calibrating sensor %d with low calibration current %f\n\n", sensor+1, calCurrentVal);
+      printf("Calibrating sensor %d with calibration current %f\n\n", sensor+1, calCurrentVal);
 
       lynsyn_adcCalibrateCurrent(sensor, calCurrentVal, maxCurrentVal);
     }
@@ -203,7 +218,7 @@ void calibrateSensorVoltage(int sensor, double acceptance) {
 
       calVoltageVal = strtod(calVoltage, NULL);
 
-      printf("Calibrating sensor %d with low calibration voltage %f\n\n", sensor+1, calVoltageVal);
+      printf("Calibrating sensor %d with calibration voltage %f\n\n", sensor+1, calVoltageVal);
 
       lynsyn_adcCalibrateVoltage(sensor, calVoltageVal, maxVoltageVal);
     }
@@ -311,14 +326,14 @@ void programTestAndCalibrate(double acceptance) {
 
   printf("Sixt step: Current sensor calibration.\n\n");
 
-  for(int i = 0; i < SENSORS; i++) {
+  for(int i = 0; i < SENSORS_BOARD_3; i++) {
     calibrateSensorCurrent(i, acceptance);
   }
 
   printf("Seventh step: Voltage sensor calibration.\n\n");
   printf("This lynsyn has a maximum voltage of %fV\n\n", lynsyn_getMaxVoltage());
 
-  for(int i = 0; i < SENSORS; i++) {
+  for(int i = 0; i < SENSORS_BOARD_3; i++) {
     calibrateSensorVoltage(i, acceptance);
   }
 
@@ -405,13 +420,14 @@ static char doc[] = "A test and calibration tool for Lynsyn boards";
 static char args_doc[] = "";
 
 static struct argp_option options[] = {
-  {"board-version", 'b', "version",   0, "Board version" },
+  {"board-version", 'b', "version",   0, "Board version (2 for original, 3 for lite)" },
   {"procedure",     'p', "procedure", 0, "Which procedure to run" },
   {"acceptance",    'a', "value",     0, "Maximum allowed error in percentage (0.01 default" },
   { 0 }
 };
 
 struct arguments {
+  int board;
   int procedure;
   double acceptance;
 };
@@ -422,6 +438,9 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state) {
   struct arguments *arguments = state->input;
 
   switch (key) {
+    case 'b':
+      arguments->board = strtol(arg, NULL, 10);
+      break;
     case 'p':
       arguments->procedure = strtol(arg, NULL, 10);
       break;
@@ -447,8 +466,15 @@ int main(int argc, char *argv[]) {
   struct arguments arguments;
   arguments.procedure = -1;
   arguments.acceptance = 0.01;
+  arguments.board = 3;
 
   argp_parse (&argp, argc, argv, 0, 0, &arguments);
+
+  switch(arguments.board) {
+    case 2: printf("Lynsyn Original\n"); hwVersion = HW_VERSION_2_2; break;
+    case 3: printf("Lynsyn Lite\n"); hwVersion = HW_VERSION_3_0; break;
+    default: printf("ERROR: Unknown board\n"); exit(1);
+  }
 
   if(arguments.procedure < 1) { 
     char choiceBuf[80];
@@ -456,10 +482,10 @@ int main(int argc, char *argv[]) {
     printf("Which procedure do you want to perform?\n");
     printf("Enter '1' for complete programming, test and calibration.\n");
     printf("Enter '2' for only current sensor calibration\n");
-    printf("Enter '3' for only voltage sensor calibration\n");
+    if(arguments.board >= 3) {
+      printf("Enter '3' for only voltage sensor calibration\n");
+    }
     printf("Enter '4' for live measurements\n");
-    printf("Enter '5' for USB firmware upgrade\n");
-    printf("Enter '6' for complete programming and testing, excluding calibration.\n");
     if(!fgets(choiceBuf, 80, stdin)) {
       printf("I/O error\n");
       exit(-1);
@@ -486,10 +512,12 @@ int main(int argc, char *argv[]) {
       break;
 
     case 3:
-      printf("*** Connect Lynsyn to the PC USB port.\n");
-      getchar();
+      if(arguments.board >= 3) {
+        printf("*** Connect Lynsyn to the PC USB port.\n");
+        getchar();
 
-      calVoltageSensor(arguments.acceptance);
+        calVoltageSensor(arguments.acceptance);
+      }
       break;
 
     case 4:
@@ -497,20 +525,6 @@ int main(int argc, char *argv[]) {
       getchar();
 
       live();
-      break;
-
-    case 5:
-      printf("*** Connect Lynsyn to the PC USB port.\n");
-      getchar();
-
-      //lynsyn_usbFirmwareUpgrade();
-      break;
-
-    case 6:
-      printf("This procedure programs and tests the Lynsyn board.\n"
-             "All lines starting with '***' requires you to do a certain action, and then press enter to continue.\n\n");
-
-      programTest();
       break;
 
     default:

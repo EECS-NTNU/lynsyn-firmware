@@ -12,10 +12,10 @@ export TOOLCHAIN=/opt/SimplicityStudio_v4/developer/toolchains/gnu_arm/7.2_2017q
 # Uncomment one of the following for the HW version you are compiling firmware for:
 
 # compile for lynsyn original
-#export HW=2
+export HW=2
 
 # compile for lynsyn lite
-export HW=3
+#export HW=3
 
 ###############################################################################
 
@@ -59,7 +59,7 @@ firmware:
 synthesis:
 	mkdir -p fwbin
 	cd fpga && $(MAKE)
-	cp build/lynsyn.mcs fwbin
+	cp fpga/build/lynsyn.mcs fwbin
 	@echo
 	@echo "FPGA synthesis successful"
 	@echo
@@ -88,4 +88,5 @@ clean :
 	cd lynsyn_sampler && $(MAKE) clean
 	cd lynsyn_xvc && $(MAKE) clean
 	cd lynsyn_viewer/build && $(MAKE) clean
+	cd fpga && $(MAKE) clean
 	rm -rf liblynsyn/*.o bin fwbin

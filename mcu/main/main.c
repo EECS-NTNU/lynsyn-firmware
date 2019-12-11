@@ -108,49 +108,6 @@ int main(void) {
 
   clearLed(0);
 
-#if 0
-  {
-    /* DWT->CYCCNT = 0; */
-    /* while(DWT->CYCCNT < 480000000); */
-
-    struct JtagDevice devices[SIZE_JTAG_DEVICE_LIST];
-
-    memset(devices, 0, sizeof(devices));
-
-    devices[0].idcode = 0x4ba00477;
-    devices[0].irlen = 4;
-
-    devices[1].idcode = 0x1372c093;
-    devices[1].irlen = 6;
-
-    devices[2].idcode = 0x5ba00477;
-    devices[2].irlen = 4;
-
-    devices[3].idcode = 0x14710093;
-    devices[3].irlen = 12;
-
-    devices[4].idcode = 0x04721093;
-    devices[4].irlen = 12;
-
-    devices[5].idcode = 0x28e20126;
-    devices[5].irlen = 12;
-
-    if(armInitCores(devices)) {
-
-      coreReadPcsrInit(0x1);
-  
-      for(int i = 0; i < 100; i++) {
-        uint64_t pc[4];
-        bool halted;
-
-        if(coreReadPcsrFast(pc, &halted)) {
-          printf("%d: %llx %llx %llx %llx\n", i, pc[0], pc[1], pc[2], pc[3]);
-        }
-      }
-    }
-  }
-#endif
-
   printf("Ready.\n");
 
   int samples = 0;

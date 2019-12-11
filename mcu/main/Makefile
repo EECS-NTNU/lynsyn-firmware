@@ -8,6 +8,7 @@ OBJDUMP= ${TOOLCHAIN}/arm-none-eabi-objdump
 CFLAGS = \
 	-g -O2 -Wall -std=gnu99 \
 	-mcpu=cortex-m3 -mthumb \
+	-Wno-format-truncation \
 	-DVERSION${HW} \
 	-D${PART} \
 	-I${SDK}/platform/Device/SiliconLabs/EFM32GG/Include/ \

@@ -599,6 +599,14 @@ static int initSent(USB_Status_TypeDef status, uint32_t xf, uint32_t remaining) 
   (void)remaining;
 
 #ifdef VERSION2
+  calInfo.currentPoints[0] = 1;
+  calInfo.currentPoints[1] = 1;
+  calInfo.currentPoints[2] = 1;
+  calInfo.currentPoints[3] = 1;
+  calInfo.currentPoints[4] = 1;
+  calInfo.currentPoints[5] = 1;
+  calInfo.currentPoints[6] = 1;
+
   calInfo.offsetCurrent[0][0] = getDouble("offset0");
   calInfo.offsetCurrent[1][0] = getDouble("offset1");
   calInfo.offsetCurrent[2][0] = getDouble("offset2");
