@@ -1,0 +1,25 @@
+CC = gcc
+
+PART=EFM32GG332F1024
+export SDK=/opt/SimplicityStudio_v4/developer/sdks/gecko_sdk_suite/v2.4/
+
+CFLAGS = \
+	-Ilinux \
+	-g -O0 -Wall -std=gnu99 -Wno-pointer-to-int-cast -Wno-int-to-pointer-cast -Wno-overflow \
+	-D${PART} \
+	-I${SDK}/platform/Device/SiliconLabs/EFM32GG/Include/ \
+	-I${SDK}/hardware/kit/common/drivers/ \
+	-I${SDK}/platform/CMSIS/Include/ \
+	-I${SDK}/platform/emlib/inc/ \
+	-I${SDK}/platform/middleware/usb_gecko/inc/ -I.
+LDFLAGS =
+
+lynsyn_linux: jtag_lowlevel.o jtag.o arm.o main.o usb.o jtag_lowlevel.o linux/linux.o
+	${CC} ${LDFLAGS} $^ -o $@
+
+%.o : %.c
+	${CC} ${CFLAGS} -c $< -o $@
+
+.PHONY: clean
+clean:
+	rm -rf *.o *.elf *.bin *.hex *.dis ${SDK}/platform/emlib/src/*.o ${SDK}/platform/middleware/usb_gecko/src/*.o ${SDK}/Device/SiliconLabs/EFM32GG/Source/GCC/*.o ${SDK}/Device/SiliconLabs/EFM32GG/Source/*.o ${SDK}/platform/Device/SiliconLabs/EFM32GG/Source/GCC/startup_efm32gg.o

@@ -1,0 +1,85 @@
+EESchema Schematic File Version 4
+LIBS:lynsyn-cache
+EELAYER 26 0
+EELAYER END
+$Descr A4 11693 8268
+encoding utf-8
+Sheet 1 5
+Title "Lynsyn JTAG and Current Monitor"
+Date "2019-09-13"
+Rev "3.0"
+Comp "NTNU"
+Comment1 "Asbjørn Djupdal"
+Comment2 ""
+Comment3 ""
+Comment4 ""
+$EndDescr
+$Sheet
+S 4875 2775 1600 1200
+U 5A30ECDB
+F0 "MCU" 60
+F1 "mcu.sch" 60
+F2 "ADC0" I L 4875 2925 60 
+F3 "ADC1" I L 4875 3025 60 
+F4 "ADC2" I L 4875 3125 60 
+F5 "ADC3" I L 4875 3225 60 
+F6 "CLK0" O R 6475 2950 60 
+F7 "TX0" O R 6475 3050 60 
+F8 "RX0" I R 6475 3250 60 
+F9 "SRST" O R 6475 3350 60 
+F10 "TX1" O R 6475 3150 60 
+F11 "ADC4" I L 4875 3325 60 
+F12 "ADC5" I L 4875 3425 60 
+$EndSheet
+$Sheet
+S 2125 2775 1600 1200
+U 5A30ECFD
+F0 "Current monitor" 60
+F1 "current.sch" 60
+F2 "ADC0" O R 3725 2925 60 
+F3 "ADC1" O R 3725 3025 60 
+F4 "ADC2" O R 3725 3125 60 
+F5 "ADC3" O R 3725 3225 60 
+F6 "ADC4" O R 3725 3325 60 
+F7 "ADC5" O R 3725 3425 60 
+$EndSheet
+$Sheet
+S 3225 5250 1450 900 
+U 5A30ED13
+F0 "Power" 60
+F1 "power.sch" 60
+$EndSheet
+Wire Wire Line
+	3725 2925 4875 2925
+Wire Wire Line
+	4875 3025 3725 3025
+Wire Wire Line
+	3725 3125 4875 3125
+$Sheet
+S 7700 2775 1350 1200
+U 5A35A97A
+F0 "JTAG" 60
+F1 "jtag.sch" 60
+F2 "jtag_tms" I L 7700 3050 60 
+F3 "jtag_tck" I L 7700 2950 60 
+F4 "jtag_tdo" O L 7700 3250 60 
+F5 "jtag_tdi" I L 7700 3150 60 
+F6 "jtag_trst" I L 7700 3350 60 
+$EndSheet
+Wire Wire Line
+	4875 3225 3725 3225
+Wire Wire Line
+	6475 2950 7700 2950
+Wire Wire Line
+	6475 3050 7700 3050
+Wire Wire Line
+	6475 3150 7700 3150
+Wire Wire Line
+	6475 3250 7700 3250
+Wire Wire Line
+	6475 3350 7700 3350
+Wire Wire Line
+	3725 3325 4875 3325
+Wire Wire Line
+	3725 3425 4875 3425
+$EndSCHEMATC
