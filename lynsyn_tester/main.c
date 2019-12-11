@@ -129,7 +129,12 @@ bool testUsb(void) {
 ///////////////////////////////////////////////////////////////////////////////
 
 void calibrateSensorCurrent(int sensor, double acceptance) {
-  if((sensor < 0) || (sensor > 2)) {
+  int sensors = SENSORS_BOARD_3;
+  if(hwVersion == HW_VERSION_2_2) {
+    sensors = SENSORS_BOARD_2;
+  }
+
+  if((sensor < 0) || (sensor >= sensors)) {
     printf("Incorrect sensor number: %d\n", sensor+1);
     exit(-1);
   }
@@ -184,7 +189,7 @@ void calibrateSensorCurrent(int sensor, double acceptance) {
 }
 
 void calibrateSensorVoltage(int sensor, double acceptance) {
-  if((sensor < 0) || (sensor > 2)) {
+  if((sensor < 0) || (sensor >= SENSORS_BOARD_3)) {
     printf("Incorrect sensor number: %d\n", sensor+1);
     exit(-1);
   }
@@ -239,7 +244,7 @@ void calibrateSensorVoltage(int sensor, double acceptance) {
 void programTest(void) {
   printf("First step: Manual tests.\n\n");
 
-  {
+  if(hwVersion >= HW_VERSION_3_0) {
     printf("*** Connect Lynsyn to the PC USB port.\n");
     getchar();
 
@@ -247,6 +252,19 @@ void programTest(void) {
     getchar();
 
     printf("*** Verify that LED D1 is lit.\n");
+    getchar();
+
+  } else {
+    printf("*** Measure the voltage across C56.  Should be 1.0V.\n");
+    getchar();
+
+    printf("*** Measure the voltage across C66.  Should be 1.8V.\n");
+    getchar();
+
+    printf("*** Measure the voltage across C68.  Should be 3.3V.\n");
+    getchar();
+
+    printf("*** Verify that LED D3 is lit.\n");
     getchar();
   }
 
@@ -260,7 +278,12 @@ void programTest(void) {
 
   printf("Second step: Flashing.\n\n");
 
-  printf("*** Connect the EFM32 starter kit to Lynsyn J5 (Cortex Debug).\n");
+  if(hwVersion >= HW_VERSION_3_0) {
+    printf("*** Connect the EFM32 starter kit to Lynsyn J5 (Cortex Debug).\n");
+  } else {
+    printf("*** Connect the EFM32 starter kit to Lynsyn J6 (MCU_debug).\n");
+  }
+
   getchar();
 
   printf("*** Enter boot bin filename [fwbin/lynsyn_boot.bin]:\n");
@@ -326,15 +349,22 @@ void programTestAndCalibrate(double acceptance) {
 
   printf("Sixt step: Current sensor calibration.\n\n");
 
-  for(int i = 0; i < SENSORS_BOARD_3; i++) {
+  int sensors = SENSORS_BOARD_3;
+  if(hwVersion == HW_VERSION_2_2) {
+    sensors = SENSORS_BOARD_2;
+  }
+      
+  for(int i = 0; i < sensors; i++) {
     calibrateSensorCurrent(i, acceptance);
   }
 
-  printf("Seventh step: Voltage sensor calibration.\n\n");
-  printf("This lynsyn has a maximum voltage of %fV\n\n", lynsyn_getMaxVoltage());
+  if(hwVersion >= HW_VERSION_3_0) {
+    printf("Seventh step: Voltage sensor calibration.\n\n");
+    printf("This lynsyn has a maximum voltage of %fV\n\n", lynsyn_getMaxVoltage());
 
-  for(int i = 0; i < SENSORS_BOARD_3; i++) {
-    calibrateSensorVoltage(i, acceptance);
+    for(int i = 0; i < SENSORS_BOARD_3; i++) {
+      calibrateSensorVoltage(i, acceptance);
+    }
   }
 
   lynsyn_release();
