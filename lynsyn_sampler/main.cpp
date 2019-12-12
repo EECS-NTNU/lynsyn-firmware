@@ -128,8 +128,16 @@ int main(int argc, char *argv[]) {
       lynsyn_startPeriodSampling(arguments.duration, arguments.cores);
     }
 
+    unsigned cores = 0;
+    for(int i = 0; i < 8; i++) {
+      if(arguments.cores & (1 << i)) cores++;
+    }
+
     std::ofstream file(arguments.output);
     if(!file.fail()) {
+
+      file << "Sensors;Cores\n";
+      file << lynsyn_numSensors() << ";" << cores << "\n";
 
       file << "Time" << std::setprecision(9) << std::fixed;
       for(int i = 0; i < MAX_CORES; i++) {

@@ -28,6 +28,8 @@ class MainWindow : public QMainWindow {
   QThread thread;
   QProgressDialog *progDialog;
 
+  void updateComboboxes();
+
 public:
   explicit MainWindow(QWidget *parent = 0);
   ~MainWindow();

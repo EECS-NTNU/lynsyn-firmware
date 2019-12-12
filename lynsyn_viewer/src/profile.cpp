@@ -46,7 +46,7 @@ void Profile::connect() {
   success = query.exec("CREATE TABLE IF NOT EXISTS marks (time INT, delay INT)");
   assert(success);
 
-  queryString = "CREATE TABLE IF NOT EXISTS meta (samples INT, mintime INT, maxtime INT";
+  queryString = "CREATE TABLE IF NOT EXISTS meta (sensors INT, cores INT, samples INT, mintime INT, maxtime INT";
   for(unsigned sensor = 0; sensor < LYNSYN_MAX_SENSORS; sensor++) {
     queryString += ", mincurrent" + QString::number(sensor + 1) + " REAL";
     queryString += ", maxcurrent" + QString::number(sensor + 1) + " REAL";
@@ -59,6 +59,12 @@ void Profile::connect() {
 
   success = query.exec(queryString);
   assert(success);
+
+  success = query.exec(QString() + "SELECT sensors,cores FROM meta");
+  if(query.next()) {
+    numSensors = query.value("sensors").toUInt();
+    numCores = query.value("cores").toUInt();
+  }
 }
 
 void Profile::disconnect() {
@@ -74,30 +80,40 @@ bool Profile::exportCsv(QString csvFilename) {
   bool success = csvFile.open(QIODevice::WriteOnly);
   if(!success) return false;
 
-  QString header = "Time";
-  for(int i = 0; i < LYNSYN_MAX_CORES; i++) {
-    header += ";pc " + QString::number(i);
-  }
-  for(int i = 0; i < LYNSYN_MAX_SENSORS; i++) {
-    header += ";current " + QString::number(i);
-  }
-  for(int i = 0; i < LYNSYN_MAX_SENSORS; i++) {
-    header += ";voltage " + QString::number(i);
-  }
-  header += "\n";
-
-  csvFile.write(header.toUtf8());
-  
   QSqlDatabase db = QSqlDatabase::database(dbConnection);
   QSqlQuery query(db);
   
-  success = query.exec(QString() + "SELECT mintime FROM meta");
+  success = query.exec(QString() + "SELECT sensors,cores,mintime FROM meta");
   if(!query.next()) {
     csvFile.close();
     printf("SQL Error: %s\n", query.lastError().text().toUtf8().constData());
     return false;
   }
+  numSensors = query.value("sensors").toUInt();
+  numCores = query.value("cores").toUInt();
   int64_t minTime = query.value("mintime").toDouble();
+
+  {
+    QString header = "Sensors;Cores\n" + QString::number(numSensors) + ";" + QString::number(numCores) + "\n";
+    csvFile.write(header.toUtf8());
+  }
+  
+  {
+    QString header = "Time";
+    for(int i = 0; i < LYNSYN_MAX_CORES; i++) {
+      header += ";pc " + QString::number(i);
+    }
+    for(int i = 0; i < LYNSYN_MAX_SENSORS; i++) {
+      header += ";current " + QString::number(i);
+    }
+    for(int i = 0; i < LYNSYN_MAX_SENSORS; i++) {
+      header += ";voltage " + QString::number(i);
+    }
+    header += "\n";
+
+    csvFile.write(header.toUtf8());
+  }
+  
 
   QString queryString = "SELECT time";
   for(int i = 0; i < LYNSYN_MAX_CORES; i++) {
@@ -188,8 +204,16 @@ bool Profile::importCsv(QString csvFilename, QStringList elfFilenames, QString k
 
   query.prepare(queryString);
 
-  file.readLine();
+  { // header
+    file.readLine(); // get rid of comment
+    QString line = file.readLine();
+    QStringList tokens = line.split(';');
+    numSensors = tokens[0].toUInt();
+    numCores = tokens[1].toUInt();
+    file.readLine(); // get rid of comment
+  }
 
+  // body
   int samples = 0;
   int64_t minTime = -1;
   int64_t maxTime = 0;
@@ -269,7 +293,7 @@ bool Profile::importCsv(QString csvFilename, QStringList elfFilenames, QString k
   {
     QSqlQuery query(db);
 
-    QString queryString = "INSERT INTO meta (samples, mintime, maxtime";
+    QString queryString = "INSERT INTO meta (sensors, cores, samples, mintime, maxtime";
     for(unsigned sensor = 0; sensor < LYNSYN_MAX_SENSORS; sensor++) {
       queryString += ", mincurrent" + QString::number(sensor + 1);
       queryString += ", maxcurrent" + QString::number(sensor + 1);
@@ -278,7 +302,7 @@ bool Profile::importCsv(QString csvFilename, QStringList elfFilenames, QString k
       queryString += ", minpower" + QString::number(sensor + 1);
       queryString += ", maxpower" + QString::number(sensor + 1);
     }
-    queryString += ") VALUES (:samples, :mintime, :maxtime";
+    queryString += ") VALUES (:sensors, :cores, :samples, :mintime, :maxtime";
     for(unsigned sensor = 0; sensor < LYNSYN_MAX_SENSORS; sensor++) {
       queryString += ", :mincurrent" + QString::number(sensor + 1);
       queryString += ", :maxcurrent" + QString::number(sensor + 1);
@@ -291,6 +315,8 @@ bool Profile::importCsv(QString csvFilename, QStringList elfFilenames, QString k
 
     query.prepare(queryString);
 
+    query.bindValue(":sensors", numSensors);
+    query.bindValue(":cores", numCores);
     query.bindValue(":samples", samples);
     query.bindValue(":mintime", (qint64)minTime);
     query.bindValue(":maxtime", (qint64)maxTime);
@@ -348,12 +374,16 @@ bool Profile::runProfiler() {
   uint64_t endAddr = 0;
   uint64_t markAddr = 0;
 
+  numSensors = lynsyn_numSensors();
+  numCores = 0;
+
   if(profDialog->useJtag) {
     useBp = profDialog->ui->bpCheckBox->checkState() == Qt::Checked;
 
     for(unsigned i = 0; i < cores(); i++) {
       if(profDialog->coreCheckboxes[i]->checkState() == Qt::Checked) {
         coreMask |= 1 << i;
+        numCores++;
       }
     }
 
@@ -499,7 +529,7 @@ bool Profile::runProfiler() {
   {
     QSqlQuery query(db);
 
-    QString queryString = "INSERT INTO meta (samples, mintime, maxtime";
+    QString queryString = "INSERT INTO meta (sensors, cores, samples, mintime, maxtime";
     for(unsigned sensor = 0; sensor < LYNSYN_MAX_SENSORS; sensor++) {
       queryString += ", mincurrent" + QString::number(sensor + 1);
       queryString += ", maxcurrent" + QString::number(sensor + 1);
@@ -508,7 +538,7 @@ bool Profile::runProfiler() {
       queryString += ", minpower" + QString::number(sensor + 1);
       queryString += ", maxpower" + QString::number(sensor + 1);
     }
-    queryString += ") VALUES (:samples, :mintime, :maxtime";
+    queryString += ") VALUES (:sensors, :cores, :samples, :mintime, :maxtime";
     for(unsigned sensor = 0; sensor < LYNSYN_MAX_SENSORS; sensor++) {
       queryString += ", :mincurrent" + QString::number(sensor + 1);
       queryString += ", :maxcurrent" + QString::number(sensor + 1);
@@ -521,6 +551,8 @@ bool Profile::runProfiler() {
 
     query.prepare(queryString);
 
+    query.bindValue(":sensors", numSensors);
+    query.bindValue(":cores", numCores);
     query.bindValue(":samples", samples);
     query.bindValue(":mintime", (qint64)minTime);
     query.bindValue(":maxtime", (qint64)maxTime);

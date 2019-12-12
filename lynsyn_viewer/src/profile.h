@@ -17,6 +17,8 @@ private:
 
 public:
   QString dbConnection;
+  unsigned numSensors;
+  unsigned numCores;
 
   Profile(QString dbFilename);
   ~Profile();

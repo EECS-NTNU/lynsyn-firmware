@@ -9,6 +9,22 @@
 #include "importdialog.h"
 #include "ui_importdialog.h"
 
+void MainWindow::updateComboboxes() {
+  sensorBox->clear();
+  for(unsigned i = 0; i < profile->numSensors; i++) {
+    sensorBox->addItem(QString("Sensor ") + QString::number(i+1));
+  }
+  if(Config::sensor >= (unsigned)sensorBox->count()) Config::sensor = 0;
+  if(sensorBox->count() != 0) sensorBox->setCurrentIndex(Config::sensor);
+  
+  coreBox->clear();
+  for(unsigned i = 0; i < profile->numCores; i++) {
+    coreBox->addItem(QString("Core ") + QString::number(i));
+  }
+  if(Config::core >= (unsigned)coreBox->count()) Config::core = 0;
+  if(coreBox->count() != 0) coreBox->setCurrentIndex(Config::core);
+}
+
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow) {
   ui->setupUi(this);
 
@@ -28,9 +44,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
   ui->toolBar->addWidget(measurementBox);
 
   sensorBox = new QComboBox();
-  for(unsigned i = 0; i < LYNSYN_MAX_SENSORS; i++) {
-    sensorBox->addItem(QString("Sensor ") + QString::number(i+1));
-  }
   connect(sensorBox, SIGNAL(activated(int)), this, SLOT(changeSensor(int)));
   ui->toolBar->addWidget(sensorBox);
 
@@ -57,16 +70,12 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
   restoreGeometry(settings.value("geometry").toByteArray());
   restoreState(settings.value("windowState").toByteArray(), VERSION);
 
-  for(unsigned i = 0; i < LYNSYN_MAX_CORES; i++) {
-    coreBox->addItem(QString("Core ") + QString::number(i));
-  }
-
   Config::core = settings.value("core", 0).toUInt();
   Config::sensor = settings.value("sensor", 0).toUInt();
   Config::measurement = settings.value("measurement", 0).toUInt();
 
-  coreBox->setCurrentIndex(Config::core);
-  sensorBox->setCurrentIndex(Config::sensor);
+  updateComboboxes();
+
   measurementBox->setCurrentIndex(Config::measurement);
 
   //---------------------------------------------------------------------------
@@ -122,6 +131,8 @@ void MainWindow::importCsv() {
       tableView->horizontalHeader()->restoreState(settings.value("tableViewState").toByteArray());
 
       graphScene->drawProfile(Config::core, Config::sensor, (MeasurementType)Config::measurement, profile);
+
+      updateComboboxes();
 
       QApplication::restoreOverrideCursor();
       QMessageBox msgBox;
@@ -247,6 +258,8 @@ void MainWindow::finishProfile(int error, QString msg) {
   profDialog = NULL;
 
   profile->endProfiler();
+
+  updateComboboxes();
 
   QApplication::restoreOverrideCursor();
 
