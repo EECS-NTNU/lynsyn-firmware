@@ -12,10 +12,10 @@ export TOOLCHAIN=/opt/SimplicityStudio_v4/developer/toolchains/gnu_arm/7.2_2017q
 # Uncomment one of the following for the HW version you are compiling firmware for:
 
 # compile for lynsyn original
-#export HW=2
+export HW=2
 
 # compile for lynsyn lite
-export HW=3
+#export HW=3
 
 ###############################################################################
 
