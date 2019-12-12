@@ -47,6 +47,32 @@ unsigned hwVersion = HW_VERSION_3_0;
 
 ///////////////////////////////////////////////////////////////////////////////
 
+bool programFpga(char *filename) {
+  printf("Flashing %s\n", filename);
+
+  char command[256];
+  snprintf(command, 256, "program_flash -f %s -flash_type s25fl128sxxxxxx0-spi-x1_x2_x4 -blank_check -verify -cable type xilinx_tcf", filename);
+
+  int ret = system(command);
+  if(ret) {
+    printf("Can't program the FPGA flash.  Possible problems:\n");
+    printf("- Can't find mcs file\n");
+    printf("- Xilinx Vivado software problem\n");
+    printf("- Lynsyn USB port is not connected to the PC\n");
+    printf("- Xilinx USB cable is not connected to both PC and Lynsyn\n");
+    printf("- Faulty soldering or components:\n");
+    printf("  - U1 Flash\n");
+    printf("  - R1, R2, R3\n");
+    printf("  - U2 FPGA\n");
+    printf("  - J5 FPGA_debug\n");
+    return false;
+  }
+
+  printf("FPGA flashed OK\n");
+
+  return true;
+}
+
 bool programMcu(char *bootFilename, char *mainFilename) {
   printf("Flashing %s and %s\n", bootFilename, mainFilename);
 
@@ -61,6 +87,7 @@ bool programMcu(char *bootFilename, char *mainFilename) {
 
   if(ret) {
     printf("Can't program the MCU.  Possible problems:\n");
+    printf("- Can't find bin files\n");
     printf("- SiLabs Simplicity Commander problem\n");
     printf("- Lynsyn USB port is not connected to the PC\n");
     printf("- EFM32 programmer is not connected to both PC and Lynsyn\n");
@@ -280,7 +307,28 @@ void programTest(void) {
 
   if(hwVersion >= HW_VERSION_3_0) {
     printf("*** Connect the EFM32 starter kit to Lynsyn J5 (Cortex Debug).\n");
+
   } else {
+    printf("*** Connect the Xilinx USB cable to Lynsyn J5.\n");
+    getchar();
+
+    printf("*** Enter fpga mcs filename [fwbin/lynsyn.mcs]:\n");
+    char filename[80];
+    if(!fgets(filename, 80, stdin)) {
+      printf("I/O error\n");
+      exit(-1);
+    }
+    if(filename[0] == '\n') strncpy(filename, "fwbin/lynsyn.mcs", 80);
+    filename[strcspn(filename, "\n")] = 0;
+
+    if(!programFpga(filename)) exit(-1);
+
+    printf("*** Remove Xilinx USB cable from lynsyn.\n");
+    getchar();
+
+    printf("*** Reboot Lynsyn by removing and replugging the USB cable.\n");
+    getchar();
+
     printf("*** Connect the EFM32 starter kit to Lynsyn J6 (MCU_debug).\n");
   }
 
