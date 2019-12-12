@@ -23,7 +23,16 @@
 
 #include "profmodel.h"
 
-ProfModel::ProfModel(unsigned core, QObject *parent) : QAbstractTableModel(parent) {
+ProfModel::ProfModel(Profile *profile, QObject *parent) : QAbstractTableModel(parent) {
+  this->profile = profile;
+}
+
+void ProfModel::recalc(unsigned core, unsigned sensor) {
+  for(auto i : table) {
+    delete i;
+  }
+  table.clear();
+  profile->buildProfTable(core, sensor, table);
 }
 
 int ProfModel::rowCount(const QModelIndex &parent) const {
@@ -33,7 +42,7 @@ int ProfModel::rowCount(const QModelIndex &parent) const {
 
 int ProfModel::columnCount(const QModelIndex &parent) const {
   Q_UNUSED(parent);
-  return 7;
+  return 4;
 }
 
 QVariant ProfModel::data(const QModelIndex &index, int role) const {
@@ -43,9 +52,9 @@ QVariant ProfModel::data(const QModelIndex &index, int role) const {
       return line->id;
     }
     switch(index.column()-1) {
-      case 0: return line->runtime;
-      case 1: return line->power;
-      case 2: return line->energy;
+      case 0: return line->getRuntime();
+      case 1: return line->getPower();
+      case 2: return line->getEnergy();
     }
   }
   return QVariant();

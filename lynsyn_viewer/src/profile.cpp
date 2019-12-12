@@ -631,3 +631,54 @@ unsigned Profile::cores() {
 unsigned Profile::sensors() {
   return lynsyn_numSensors();
 }
+
+void Profile::buildProfTable(QVector<Measurement> *measurements, std::vector<ProfLine*> &table) {
+  QMap<QString,ProfLine*> lineMap;
+  for(auto m : *measurements) {
+    auto it = lineMap.find(m.id);
+    ProfLine *profLine = NULL;
+    if(it != lineMap.end()) {
+      profLine = *it;
+    } else {
+      profLine = new ProfLine(m.id);
+      lineMap[m.id] = profLine;
+    }
+    profLine->addMeasurement(m);
+  }
+  for(auto line : lineMap) {
+    table.push_back(line);
+  }
+}
+
+void Profile::buildProfTable(unsigned core, unsigned sensor, std::vector<ProfLine*> &table) {
+  QSqlDatabase db = QSqlDatabase::database(dbConnection);
+  QSqlQuery query(db);
+
+  QVector<Measurement> *measurements = new QVector<Measurement>;
+
+  QString queryString = QString() +
+    "SELECT time,timeSinceLast,function" + QString::number(core+1) +
+    ",module" + QString::number(core+1) +
+    ",current" + QString::number(sensor+1) +
+    ",voltage" + QString::number(sensor+1) +
+    " FROM measurements";
+
+  query.exec(queryString);
+
+  while(query.next()) {
+    int64_t time = query.value("time").toLongLong();
+    int64_t timeSinceLast = query.value("timeSinceLast").toLongLong();
+
+    double current = query.value("current" + QString::number(sensor+1)).toDouble();
+    double voltage = query.value("voltage" + QString::number(sensor+1)).toDouble();
+
+    double power = current * voltage;
+
+    QString module = query.value("module" + QString::number(core+1)).toString();
+    QString function = query.value("function" + QString::number(core+1)).toString();
+
+    measurements->push_back(Measurement(time, timeSinceLast, power, module, function));
+  }
+
+  buildProfTable(measurements, table);
+}

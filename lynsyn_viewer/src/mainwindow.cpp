@@ -42,6 +42,10 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
   graphView = new GraphView(graphScene, statusBar());
   ui->tabWidget->addTab(graphView, "Profile Graph");
 
+  tableView = new QTableView();
+  tableView->setSortingEnabled(true);
+  ui->tabWidget->addTab(tableView, "Profile Table");
+
   // statusbar
   statusBar()->showMessage("Ready");
 
@@ -67,6 +71,12 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 
   //---------------------------------------------------------------------------
 
+  profModel = new ProfModel(profile);
+  profModel->recalc(Config::core, Config::sensor);
+  tableView->setModel(profModel);
+  tableView->sortByColumn(0, Qt::AscendingOrder);
+  tableView->horizontalHeader()->restoreState(settings.value("tableViewState").toByteArray());
+
   graphScene->drawProfile(Config::core, Config::sensor, (MeasurementType)Config::measurement, profile);
 }
 
@@ -81,6 +91,9 @@ void MainWindow::closeEvent(QCloseEvent *event) {
   settings.setValue("core", Config::core);
   settings.setValue("sensor", Config::sensor);
   settings.setValue("measurement", Config::measurement);
+  if(tableView->model()) {
+    settings.setValue("tableViewState", tableView->horizontalHeader()->saveState());
+  }
 
   QMainWindow::closeEvent(event);
 }
@@ -101,6 +114,13 @@ void MainWindow::importCsv() {
                           importDialog.ui->kallsymsEdit->text())) {
 
       graphScene->clearScene();
+
+      tableView->setModel(NULL);
+      profModel->recalc(Config::core, Config::sensor);
+      tableView->setModel(profModel);
+      QSettings settings;
+      tableView->horizontalHeader()->restoreState(settings.value("tableViewState").toByteArray());
+
       graphScene->drawProfile(Config::core, Config::sensor, (MeasurementType)Config::measurement, profile);
 
       QApplication::restoreOverrideCursor();
@@ -247,30 +267,40 @@ void MainWindow::finishProfile(int error, QString msg) {
   thread.quit();
 
   graphScene->clearScene();
+
+  tableView->setModel(NULL);
+  profModel->recalc(Config::core, Config::sensor);
+  tableView->setModel(profModel);
+  QSettings settings;
+  tableView->horizontalHeader()->restoreState(settings.value("tableViewState").toByteArray());
+
   graphScene->drawProfile(Config::core, Config::sensor, (MeasurementType)Config::measurement, profile);
 }
 
 void MainWindow::changeCore(int core) {
   Config::core = core;
 
+  tableView->setModel(NULL);
+  profModel->recalc(Config::core, Config::sensor);
+  tableView->setModel(profModel);
+  QSettings settings;
+  tableView->horizontalHeader()->restoreState(settings.value("tableViewState").toByteArray());
+
   graphScene->clearScene();
   graphScene->drawProfile(Config::core, Config::sensor, (MeasurementType)Config::measurement, profile, graphScene->minTime, graphScene->maxTime);
-
-  // if(profModel) delete profModel;
-  // profModel = new ProfModel(Config::core, analysis->project->cfg);
-  // tableView->setModel(profModel);
-  // tableView->sortByColumn(0, Qt::AscendingOrder);
-  // QSettings settings;
-  // tableView->horizontalHeader()->restoreState(settings.value("tableViewState").toByteArray());
 }
 
 void MainWindow::changeSensor(int sensor) {
   Config::sensor = sensor;
 
+  tableView->setModel(NULL);
+  profModel->recalc(Config::core, Config::sensor);
+  tableView->setModel(profModel);
+  QSettings settings;
+  tableView->horizontalHeader()->restoreState(settings.value("tableViewState").toByteArray());
+
   graphScene->clearScene();
   graphScene->drawProfile(Config::core, Config::sensor, (MeasurementType)Config::measurement, profile, graphScene->minTime, graphScene->maxTime);
-  
-  //tableView->reset();
 }
 
 void MainWindow::changeMeasurement(int window) {

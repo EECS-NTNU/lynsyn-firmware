@@ -59,9 +59,9 @@ public:
         return i->id > j->id;
       }
       switch(column-1) {
-        case 0: return i->runtime > j->runtime;
-        case 1: return i->power > j->power;
-        case 2: return i->energy > j->energy;
+        case 0: return i->getRuntime() > j->getRuntime();
+        case 1: return i->getPower() > j->getPower();
+        case 2: return i->getEnergy() > j->getEnergy();
       }
     }
     if(order == Qt::DescendingOrder) {
@@ -69,9 +69,9 @@ public:
         return i->id < j->id;
       }
       switch(column-1) {
-        case 0: return i->runtime < j->runtime;
-        case 1: return i->power < j->power;
-        case 2: return i->energy < j->energy;
+        case 0: return i->getRuntime() < j->getRuntime();
+        case 1: return i->getPower() < j->getPower();
+        case 2: return i->getEnergy() < j->getEnergy();
       }
     }
     return false;
@@ -82,10 +82,13 @@ class ProfModel : public QAbstractTableModel {
   Q_OBJECT
 
   std::vector<ProfLine*> table;  
+  Profile *profile;
 
 public:  
-  ProfModel(unsigned core, QObject *parent = 0);
+  ProfModel(Profile *profile, QObject *parent = 0);
   ~ProfModel() {}
+
+  void recalc(unsigned core, unsigned sensor);
 
   int rowCount(const QModelIndex &parent) const;
   int columnCount(const QModelIndex &parent) const;

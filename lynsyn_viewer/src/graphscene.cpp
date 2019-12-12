@@ -57,24 +57,6 @@ void GraphScene::addGanttLineSegments(int line, QVector<Measurement> *measuremen
   }
 }
 
-void GraphScene::buildProfTable(QVector<Measurement> *measurements, std::vector<ProfLine*> &table) {
-  QMap<QString,ProfLine*> lineMap;
-  for(auto m : *measurements) {
-    auto it = lineMap.find(m.id);
-    ProfLine *profLine = NULL;
-    if(it != lineMap.end()) {
-      profLine = *it;
-    } else {
-      profLine = new ProfLine(m.id);
-      lineMap[m.id] = profLine;
-    }
-    profLine->addMeasurement(m);
-  }
-  for(auto line : lineMap) {
-    table.push_back(line);
-  }
-}
-
 void GraphScene::drawProfile(unsigned core, unsigned sensor, MeasurementType measurement, Profile *profile, int64_t beginTime, int64_t endTime) {
   clear();
   ganttLines.clear();
@@ -141,7 +123,7 @@ void GraphScene::drawProfile(unsigned core, unsigned sensor, MeasurementType mea
         if(stride < 1) stride = 1;
 
         QString queryString = QString() +
-          "SELECT time,timeSincELast,function" + QString::number(core+1) +
+          "SELECT time,timeSinceLast,function" + QString::number(core+1) +
           ",module" + QString::number(core+1) +
           ",current" + QString::number(sensor+1) +
           ",voltage" + QString::number(sensor+1) +
@@ -189,7 +171,7 @@ void GraphScene::drawProfile(unsigned core, unsigned sensor, MeasurementType mea
         unsigned ganttSize = 0;
 
         std::vector<ProfLine*> table;
-        buildProfTable(measurements, table);
+        profile->buildProfTable(measurements, table);
         ProfSort profSort;
         std::sort(table.begin(), table.end(), profSort);
 

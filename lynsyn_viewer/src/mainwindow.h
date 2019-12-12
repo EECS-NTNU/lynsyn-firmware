@@ -6,6 +6,7 @@
 #include "lynsyn_viewer.h"
 #include "graphscene.h"
 #include "graphview.h"
+#include "profmodel.h"
 
 namespace Ui {
   class MainWindow;
@@ -21,6 +22,8 @@ class MainWindow : public QMainWindow {
   QComboBox *coreBox;
   QComboBox *sensorBox;
   ProfileDialog *profDialog;
+  QTableView *tableView;
+  ProfModel *profModel;
 
   QThread thread;
   QProgressDialog *progDialog;

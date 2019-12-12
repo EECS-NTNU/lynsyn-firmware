@@ -27,15 +27,18 @@
 
 class ProfLine {
 
+private:
+  double runtime;
+  double power;
+  double energy;
+  unsigned measurementCount;
+
   static bool lessThan(const Measurement &e1, const Measurement &e2) {
     return e1.time < e2.time;
   }
 
 public:
   QString id;
-  double runtime;
-  double power;
-  double energy;
   QVector<Measurement> measurements;
 
   ProfLine(QString id) {
@@ -44,19 +47,29 @@ public:
     this->runtime = 0;
     this->power = 0;
     this->energy= 0;
+    this->measurementCount = 0;
   }
 
   void addMeasurement(Measurement m) {
-    this->runtime += m.timeSinceLast;
-    this->power = m.power;
-    this->energy += m.power * m.timeSinceLast;
+    double secondsSinceLast = lynsyn_cyclesToSeconds(m.timeSinceLast);
+
+    this->runtime += secondsSinceLast;
+    this->power += m.power;
+    this->energy += m.power * secondsSinceLast;
     measurements.push_back(m);
+    measurementCount++;
   }
 
   QVector<Measurement> *getMeasurements() {
     qSort(measurements.begin(), measurements.end(), lessThan);
     return &measurements;
   }
+
+  double getPower() {
+    return power / measurementCount;
+  }
+  double getEnergy() { return energy; }
+  double getRuntime() { return runtime; }
 
 };
 

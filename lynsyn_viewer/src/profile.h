@@ -6,6 +6,7 @@
 #include <QtSql>
 
 #include "profiledialog.h"
+#include "profline.h"
 
 class Profile : public QObject {
   Q_OBJECT
@@ -31,6 +32,8 @@ public:
   void setParameters(ProfileDialog *profDialog);
   unsigned cores();
   unsigned sensors();
+  void buildProfTable(unsigned core, unsigned sensor, std::vector<ProfLine*> &table);  
+  void buildProfTable(QVector<Measurement> *measurements, std::vector<ProfLine*> &table);
 
 public slots:
   bool runProfiler();
