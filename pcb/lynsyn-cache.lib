@@ -1,11 +1,11 @@
 EESchema-LIBRARY Version 2.4
 #encoding utf-8
 #
-# Connector:Conn_ARM_JTAG_SWD_10
+# Connector_Conn_ARM_JTAG_SWD_10
 #
-DEF Connector:Conn_ARM_JTAG_SWD_10 J 0 40 Y Y 1 F N
+DEF Connector_Conn_ARM_JTAG_SWD_10 J 0 40 Y Y 1 F N
 F0 "J" -100 650 50 H V R CNN
-F1 "Connector:Conn_ARM_JTAG_SWD_10" -100 550 50 H V R BNN
+F1 "Connector_Conn_ARM_JTAG_SWD_10" -100 550 50 H V R BNN
 F2 "Connector_PinHeader_1.27mm:PinHeader_2x05_P1.27mm_Vertical_SMD" 50 -550 50 H I L TNN
 F3 "" -350 -1250 50 V I C CNN
 $FPLIST
@@ -36,11 +36,11 @@ X GNDDetect 9 -100 -600 100 U 50 50 1 1 I
 ENDDRAW
 ENDDEF
 #
-# Connector:Conn_ARM_JTAG_SWD_20
+# Connector_Conn_ARM_JTAG_SWD_20
 #
-DEF Connector:Conn_ARM_JTAG_SWD_20 J 0 40 Y Y 1 F N
+DEF Connector_Conn_ARM_JTAG_SWD_20 J 0 40 Y Y 1 F N
 F0 "J" -200 850 50 H V R CNN
-F1 "Connector:Conn_ARM_JTAG_SWD_20" -200 750 50 H V R BNN
+F1 "Connector_Conn_ARM_JTAG_SWD_20" -200 750 50 H V R BNN
 F2 "" 450 -1050 50 H I L TNN
 F3 "" -350 -1250 50 V I C CNN
 $FPLIST
@@ -84,11 +84,11 @@ X TCK/SWDCLK 9 600 100 100 L 50 50 1 1 O
 ENDDRAW
 ENDDEF
 #
-# Connector_Generic:Conn_01x07
+# Connector_Generic_Conn_01x07
 #
-DEF Connector_Generic:Conn_01x07 J 0 40 Y N 1 F N
+DEF Connector_Generic_Conn_01x07 J 0 40 Y N 1 F N
 F0 "J" 0 400 50 H V C CNN
-F1 "Connector_Generic:Conn_01x07" 0 -400 50 H V C CNN
+F1 "Connector_Generic_Conn_01x07" 0 -400 50 H V C CNN
 F2 "" 0 0 50 H I C CNN
 F3 "" 0 0 50 H I C CNN
 $FPLIST
@@ -113,11 +113,11 @@ X Pin_7 7 -200 -300 150 R 50 50 1 1 P
 ENDDRAW
 ENDDEF
 #
-# Connector_Generic:Conn_02x02_Odd_Even
+# Connector_Generic_Conn_02x02_Odd_Even
 #
-DEF Connector_Generic:Conn_02x02_Odd_Even J 0 40 Y N 1 F N
+DEF Connector_Generic_Conn_02x02_Odd_Even J 0 40 Y N 1 F N
 F0 "J" 50 100 50 H V C CNN
-F1 "Connector_Generic:Conn_02x02_Odd_Even" 50 -200 50 H V C CNN
+F1 "Connector_Generic_Conn_02x02_Odd_Even" 50 -200 50 H V C CNN
 F2 "" 0 0 50 H I C CNN
 F3 "" 0 0 50 H I C CNN
 $FPLIST
@@ -136,11 +136,11 @@ X Pin_4 4 300 -100 150 L 50 50 1 1 P
 ENDDRAW
 ENDDEF
 #
-# Device:C
+# Device_C
 #
-DEF Device:C C 0 10 N Y 1 F N
+DEF Device_C C 0 10 N Y 1 F N
 F0 "C" 25 100 50 H V L CNN
-F1 "Device:C" 25 -100 50 H V L CNN
+F1 "Device_C" 25 -100 50 H V L CNN
 F2 "" 38 -150 50 H I C CNN
 F3 "" 0 0 50 H I C CNN
 $FPLIST
@@ -154,11 +154,11 @@ X ~ 2 0 -150 110 U 50 50 1 1 P
 ENDDRAW
 ENDDEF
 #
-# Device:R
+# Device_R
 #
-DEF Device:R R 0 0 N Y 1 F N
+DEF Device_R R 0 0 N Y 1 F N
 F0 "R" 80 0 50 V V C CNN
-F1 "Device:R" 0 0 50 V V C CNN
+F1 "Device_R" 0 0 50 V V C CNN
 F2 "" -70 0 50 V I C CNN
 F3 "" 0 0 50 H I C CNN
 $FPLIST
@@ -171,11 +171,11 @@ X ~ 2 0 -150 50 U 50 50 1 1 P
 ENDDRAW
 ENDDEF
 #
-# Diode:BAT54S
+# Diode_BAT54S
 #
-DEF Diode:BAT54S D 0 40 Y Y 1 F N
+DEF Diode_BAT54S D 0 40 Y Y 1 F N
 F0 "D" 25 -150 50 H V L CNN
-F1 "Diode:BAT54S" -250 125 50 H V L CNN
+F1 "Diode_BAT54S" -250 125 50 H V L CNN
 F2 "Package_TO_SOT_SMD:SOT-23" 75 125 50 H I L CNN
 F3 "" -120 0 50 H I C CNN
 $FPLIST
@@ -203,11 +203,11 @@ X ~ 3 0 -200 200 U 50 50 1 1 P
 ENDDRAW
 ENDDEF
 #
-# Regulator_Linear:MIC5504-3.3YM5
+# Regulator_Linear_MIC5504-3.3YM5
 #
-DEF Regulator_Linear:MIC5504-3.3YM5 U 0 20 Y Y 1 F N
+DEF Regulator_Linear_MIC5504-3.3YM5 U 0 20 Y Y 1 F N
 F0 "U" -300 350 50 H V L CNN
-F1 "Regulator_Linear:MIC5504-3.3YM5" -300 250 50 H V L CNN
+F1 "Regulator_Linear_MIC5504-3.3YM5" -300 250 50 H V L CNN
 F2 "Package_TO_SOT_SMD:SOT-23-5" 0 -400 50 H I C CNN
 F3 "" -250 250 50 H I C CNN
 ALIAS MIC5504-2.8YM5 MIC5504-2.5YM5 MIC5504-1.8YM5 MIC5504-1.2YM5 MIC5501-3.0YM5
@@ -224,11 +224,11 @@ X VOUT 5 400 100 100 L 50 50 1 1 w
 ENDDRAW
 ENDDEF
 #
-# energymicro-efm32:EFM32GG332F1024
+# energymicro-efm32_EFM32GG332F1024
 #
-DEF energymicro-efm32:EFM32GG332F1024 U 0 40 Y Y 4 L N
+DEF energymicro-efm32_EFM32GG332F1024 U 0 40 Y Y 4 L N
 F0 "U" 330 180 60 H V L BNN
-F1 "energymicro-efm32:EFM32GG332F1024" 630 180 60 H V L BNN
+F1 "energymicro-efm32_EFM32GG332F1024" 630 180 60 H V L BNN
 F2 "" 0 0 60 H I C CNN
 F3 "" 0 0 60 H I C CNN
 $FPLIST
@@ -306,11 +306,11 @@ X VSS 8 1600 -1600 300 L 50 50 4 1 W
 ENDDRAW
 ENDDEF
 #
-# lynsyn-rescue:C
+# lynsyn-rescue_C
 #
-DEF lynsyn-rescue:C C 0 10 N Y 1 F N
+DEF lynsyn-rescue_C C 0 10 N Y 1 F N
 F0 "C" 25 100 50 H V L CNN
-F1 "lynsyn-rescue:C" 25 -100 50 H V L CNN
+F1 "lynsyn-rescue_C" 25 -100 50 H V L CNN
 F2 "" 38 -150 50 H I C CNN
 F3 "" 0 0 50 H I C CNN
 $FPLIST
@@ -324,11 +324,11 @@ X ~ 2 0 -150 110 U 50 50 1 1 P
 ENDDRAW
 ENDDEF
 #
-# lynsyn-rescue:CP1
+# lynsyn-rescue_CP1
 #
-DEF lynsyn-rescue:CP1 C 0 10 N N 1 F N
+DEF lynsyn-rescue_CP1 C 0 10 N N 1 F N
 F0 "C" 25 100 50 H V L CNN
-F1 "lynsyn-rescue:CP1" 25 -100 50 H V L CNN
+F1 "lynsyn-rescue_CP1" 25 -100 50 H V L CNN
 F2 "" 0 0 50 H I C CNN
 F3 "" 0 0 50 H I C CNN
 $FPLIST
@@ -344,11 +344,11 @@ X ~ 2 0 -150 130 U 50 50 1 1 P
 ENDDRAW
 ENDDEF
 #
-# lynsyn-rescue:Crystal_GND24
+# lynsyn-rescue_Crystal_GND24
 #
-DEF lynsyn-rescue:Crystal_GND24 Y 0 40 Y N 1 F N
+DEF lynsyn-rescue_Crystal_GND24 Y 0 40 Y N 1 F N
 F0 "Y" 125 200 50 H V L CNN
-F1 "lynsyn-rescue:Crystal_GND24" 125 125 50 H V L CNN
+F1 "lynsyn-rescue_Crystal_GND24" 125 125 50 H V L CNN
 F2 "" 0 0 50 H I C CNN
 F3 "" 0 0 50 H I C CNN
 $FPLIST
@@ -371,11 +371,11 @@ X 4 4 0 -200 50 U 50 50 1 1 P
 ENDDRAW
 ENDDEF
 #
-# lynsyn-rescue:Ferrite_Bead
+# lynsyn-rescue_Ferrite_Bead
 #
-DEF lynsyn-rescue:Ferrite_Bead L 0 0 N Y 1 F N
+DEF lynsyn-rescue_Ferrite_Bead L 0 0 N Y 1 F N
 F0 "L" -150 25 50 V V C CNN
-F1 "lynsyn-rescue:Ferrite_Bead" 150 0 50 V V C CNN
+F1 "lynsyn-rescue_Ferrite_Bead" 150 0 50 V V C CNN
 F2 "" -70 0 50 V I C CNN
 F3 "" 0 0 50 H I C CNN
 $FPLIST
@@ -392,11 +392,11 @@ X ~ 2 0 -150 100 U 50 50 1 1 P
 ENDDRAW
 ENDDEF
 #
-# lynsyn-rescue:LED_ALT
+# lynsyn-rescue_LED_ALT
 #
-DEF lynsyn-rescue:LED_ALT D 0 40 Y N 1 F N
+DEF lynsyn-rescue_LED_ALT D 0 40 Y N 1 F N
 F0 "D" 0 100 50 H V C CNN
-F1 "lynsyn-rescue:LED_ALT" 0 -100 50 H V C CNN
+F1 "lynsyn-rescue_LED_ALT" 0 -100 50 H V C CNN
 F2 "" 0 0 50 H I C CNN
 F3 "" 0 0 50 H I C CNN
 $FPLIST
@@ -413,11 +413,11 @@ X A 2 150 0 100 L 50 50 1 1 P
 ENDDRAW
 ENDDEF
 #
-# lynsyn-rescue:POT_TRIM
+# lynsyn-rescue_POT_TRIM
 #
-DEF lynsyn-rescue:POT_TRIM RV 0 40 N N 1 F N
+DEF lynsyn-rescue_POT_TRIM RV 0 40 N N 1 F N
 F0 "RV" -175 0 50 V V C CNN
-F1 "lynsyn-rescue:POT_TRIM" -100 0 50 V V C CNN
+F1 "lynsyn-rescue_POT_TRIM" -100 0 50 V V C CNN
 F2 "" 0 0 50 H I C CNN
 F3 "" 0 0 50 H I C CNN
 $FPLIST
@@ -433,11 +433,11 @@ X 3 3 0 -150 50 U 50 50 1 1 P
 ENDDRAW
 ENDDEF
 #
-# lynsyn-rescue:R
+# lynsyn-rescue_R
 #
-DEF lynsyn-rescue:R R 0 0 N Y 1 F N
+DEF lynsyn-rescue_R R 0 0 N Y 1 F N
 F0 "R" 80 0 50 V V C CNN
-F1 "lynsyn-rescue:R" 0 0 50 V V C CNN
+F1 "lynsyn-rescue_R" 0 0 50 V V C CNN
 F2 "" -70 0 50 V I C CNN
 F3 "" 0 0 50 H I C CNN
 $FPLIST
@@ -451,11 +451,11 @@ X ~ 2 0 -150 50 U 50 50 1 1 P
 ENDDRAW
 ENDDEF
 #
-# lynsyn-rescue:TEST_2P
+# lynsyn-rescue_TEST_2P
 #
-DEF lynsyn-rescue:TEST_2P J 0 30 N N 1 F N
+DEF lynsyn-rescue_TEST_2P J 0 30 N N 1 F N
 F0 "J" 0 60 50 H V C CNN
-F1 "lynsyn-rescue:TEST_2P" 0 -70 50 H V C CNN
+F1 "lynsyn-rescue_TEST_2P" 0 -70 50 H V C CNN
 F2 "" 0 0 50 H I C CNN
 F3 "" 0 0 50 H I C CNN
 DRAW
@@ -466,11 +466,11 @@ X 2 2 200 0 100 L 50 50 0 1 P
 ENDDRAW
 ENDDEF
 #
-# lynsyn-rescue:USB_OTG
+# lynsyn-rescue_USB_OTG
 #
-DEF lynsyn-rescue:USB_OTG J 0 40 Y Y 1 F N
+DEF lynsyn-rescue_USB_OTG J 0 40 Y Y 1 F N
 F0 "J" -200 450 50 H V L CNN
-F1 "lynsyn-rescue:USB_OTG" -200 350 50 H V L CNN
+F1 "lynsyn-rescue_USB_OTG" -200 350 50 H V L CNN
 F2 "" 150 -50 50 H I C CNN
 F3 "" 150 -50 50 H I C CNN
 $FPLIST
@@ -501,11 +501,11 @@ X Shield 6 -100 -400 100 U 50 50 1 1 P
 ENDDRAW
 ENDDEF
 #
-# lynsyn:74LVC2T45
+# lynsyn_74LVC2T45
 #
-DEF lynsyn:74LVC2T45 U 0 40 Y Y 1 F N
+DEF lynsyn_74LVC2T45 U 0 40 Y Y 1 F N
 F0 "U" 0 600 60 H V C CNN
-F1 "lynsyn:74LVC2T45" 0 0 60 H V C CNN
+F1 "lynsyn_74LVC2T45" 0 0 60 H V C CNN
 F2 "" 0 0 60 H I C CNN
 F3 "" 0 0 60 H I C CNN
 DRAW
@@ -521,11 +521,11 @@ X VCCB 8 500 450 200 L 50 50 1 1 W
 ENDDRAW
 ENDDEF
 #
-# lynsyn:IP4220CZ6
+# lynsyn_IP4220CZ6
 #
-DEF lynsyn:IP4220CZ6 U 0 40 Y Y 1 F N
+DEF lynsyn_IP4220CZ6 U 0 40 Y Y 1 F N
 F0 "U" 0 500 60 H V C CNN
-F1 "lynsyn:IP4220CZ6" 0 0 60 H V C CNN
+F1 "lynsyn_IP4220CZ6" 0 0 60 H V C CNN
 F2 "" 0 0 60 H I C CNN
 F3 "" 0 0 60 H I C CNN
 DRAW
@@ -539,11 +539,11 @@ X IO4 6 450 350 200 L 50 50 1 1 I
 ENDDRAW
 ENDDEF
 #
-# lynsyn:LMP8640
+# lynsyn_LMP8640
 #
-DEF lynsyn:LMP8640 U 0 40 Y Y 1 F N
+DEF lynsyn_LMP8640 U 0 40 Y Y 1 F N
 F0 "U" 0 0 60 H V C CNN
-F1 "lynsyn:LMP8640" 0 400 60 H V C CNN
+F1 "lynsyn_LMP8640" 0 400 60 H V C CNN
 F2 "" 0 0 60 H I C CNN
 F3 "" 0 0 60 H I C CNN
 DRAW
@@ -557,11 +557,11 @@ X V+ 6 450 300 200 L 50 50 1 1 W
 ENDDRAW
 ENDDEF
 #
-# lynsyn:LT1009
+# lynsyn_LT1009
 #
-DEF lynsyn:LT1009 U 0 40 Y Y 1 F N
+DEF lynsyn_LT1009 U 0 40 Y Y 1 F N
 F0 "U" 0 600 60 H V C CNN
-F1 "lynsyn:LT1009" 0 0 60 H V C CNN
+F1 "lynsyn_LT1009" 0 0 60 H V C CNN
 F2 "" 0 0 60 H I C CNN
 F3 "" 0 0 60 H I C CNN
 DRAW
@@ -577,11 +577,11 @@ X POS 8 450 450 200 L 50 50 1 1 W
 ENDDRAW
 ENDDEF
 #
-# power:+3.3V
+# power_+3.3V
 #
-DEF power:+3.3V #PWR 0 0 Y Y 1 F P
+DEF power_+3.3V #PWR 0 0 Y Y 1 F P
 F0 "#PWR" 0 -150 50 H I C CNN
-F1 "power:+3.3V" 0 140 50 H V C CNN
+F1 "power_+3.3V" 0 140 50 H V C CNN
 F2 "" 0 0 50 H I C CNN
 F3 "" 0 0 50 H I C CNN
 ALIAS +3.3V
@@ -593,11 +593,11 @@ X +3V3 1 0 0 0 U 50 50 1 1 W N
 ENDDRAW
 ENDDEF
 #
-# power:+3.3VA
+# power_+3.3VA
 #
-DEF power:+3.3VA #PWR 0 0 Y Y 1 F P
+DEF power_+3.3VA #PWR 0 0 Y Y 1 F P
 F0 "#PWR" 0 -150 50 H I C CNN
-F1 "power:+3.3VA" 0 140 50 H V C CNN
+F1 "power_+3.3VA" 0 140 50 H V C CNN
 F2 "" 0 0 50 H I C CNN
 F3 "" 0 0 50 H I C CNN
 DRAW
@@ -608,11 +608,11 @@ X +3.3VA 1 0 0 0 U 50 50 1 1 W N
 ENDDRAW
 ENDDEF
 #
-# power:GND
+# power_GND
 #
-DEF power:GND #PWR 0 0 Y Y 1 F P
+DEF power_GND #PWR 0 0 Y Y 1 F P
 F0 "#PWR" 0 -250 50 H I C CNN
-F1 "power:GND" 0 -150 50 H V C CNN
+F1 "power_GND" 0 -150 50 H V C CNN
 F2 "" 0 0 50 H I C CNN
 F3 "" 0 0 50 H I C CNN
 DRAW
@@ -621,11 +621,11 @@ X GND 1 0 0 0 D 50 50 1 1 W N
 ENDDRAW
 ENDDEF
 #
-# power:PWR_FLAG
+# power_PWR_FLAG
 #
-DEF power:PWR_FLAG #FLG 0 0 N N 1 F P
+DEF power_PWR_FLAG #FLG 0 0 N N 1 F P
 F0 "#FLG" 0 75 50 H I C CNN
-F1 "power:PWR_FLAG" 0 150 50 H V C CNN
+F1 "power_PWR_FLAG" 0 150 50 H V C CNN
 F2 "" 0 0 50 H I C CNN
 F3 "" 0 0 50 H I C CNN
 DRAW

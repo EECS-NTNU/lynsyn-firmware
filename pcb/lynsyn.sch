@@ -5,8 +5,8 @@ EELAYER END
 $Descr A4 11693 8268
 encoding utf-8
 Sheet 1 5
-Title "Lynsyn JTAG and Current Monitor"
-Date "2019-09-13"
+Title "Lynsyn JTAG and Power Monitor"
+Date "2019-12-13"
 Rev "3.0"
 Comp "NTNU"
 Comment1 "Asbjørn Djupdal"
