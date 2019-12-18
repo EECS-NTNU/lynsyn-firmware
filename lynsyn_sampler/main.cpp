@@ -102,7 +102,7 @@ int main(int argc, char *argv[]) {
 
   if(arguments.useBp) {
     printf("Sampling PC and power\n");
-    printf("From breakpoing %lx to breakpoint %lx", arguments.startAddr, arguments.endAddr);
+    printf("From breakpoint %lx to breakpoint %lx", arguments.startAddr, arguments.endAddr);
     if(arguments.useFrameBp) printf(" using frame breakpoint %lx\n", arguments.frameAddr);
     else printf("\n");
     printf("Maximum duration %fs\n", arguments.duration);
