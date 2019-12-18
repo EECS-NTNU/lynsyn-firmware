@@ -64,6 +64,9 @@ void Profile::connect() {
   if(query.next()) {
     numSensors = query.value("sensors").toUInt();
     numCores = query.value("cores").toUInt();
+  } else {
+    numSensors = 0;
+    numCores = 0;
   }
 }
 
