@@ -35,12 +35,14 @@ public:
   QString elfName;
   QString function;
   uint64_t lineNumber;
+  bool valid;
 
   Addr2Line() {
-    filename = "";
-    elfName = "";
-    function = "";
+    filename = "Unknown";
+    elfName = "Unknown";
+    function = "Unknown";
     lineNumber = 0;
+    valid = false;
   }
 
   Addr2Line(QString filename, QString elfName, QString function, uint64_t lineNumber) {
@@ -48,6 +50,7 @@ public:
     this->elfName = elfName;
     this->function = function;
     this->lineNumber = lineNumber;
+    this->valid = true;
   }
 };
 
@@ -59,12 +62,12 @@ private:
   QStringList elfFiles;
   QString symsFile;
   uint64_t prevPc;
-  QMap<QString,bool> elfStatic;
 
   Addr2Line addr2line;
 
   void setPc(uint64_t pc);
-  bool isStatic(QString elf);
+  Addr2Line addr2Line(QString filename, uint64_t addr);
+  char *readLine(char *s, int size, FILE *stream);
 
 public:
   ElfSupport() {
