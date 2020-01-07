@@ -4,7 +4,7 @@ QMAKE_CXXFLAGS += -std=gnu++11 -Wno-unused-parameter
 HEADERS = $$files(src/*.h, true)
 SOURCES = $$files(src/*.cpp, true) ../liblynsyn/lynsyn.c
 
-INCLUDEPATH += src /usr/include/libusb-1.0/ ../mcu/common/ ../liblynsyn/
+INCLUDEPATH += src /usr/include/libusb-1.0/ ../mcu/common/ ../liblynsyn/ /mingw64/include/libusb-1.0/
 
 RESOURCES     = application.qrc
 

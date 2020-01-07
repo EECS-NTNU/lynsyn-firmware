@@ -166,9 +166,11 @@ bool lynsyn_postinit(void) {
 
 bool lynsyn_init(void) {
   if(!lynsyn_preinit()) {
+    fflush(stderr);
     return false;
   }
   if(!lynsyn_postinit()) {
+    fflush(stderr);
     return false;
   }
 
@@ -176,6 +178,8 @@ bool lynsyn_init(void) {
   if(!sampleBuf) return false;
 
   devices = (struct LynsynJtagDevice*)malloc(sizeof(struct LynsynJtagDevice));
+
+  fflush(stderr);
 
   return true;
 }
@@ -481,12 +485,11 @@ struct LynsynJtagDevice *lynsyn_getJtagDevices(char *filename) {
   FILE *fp = fopen(filename, "rb");
   if(!fp) return NULL;
   
-  char *line = NULL;
-  size_t n = 0;
+  char line[80];
 
   int numDevices = 0;
 
-  while((getline(&line, &n, fp)) != -1) {
+  while(fgets(line, 80, fp)) {
     if(line[0] != ';') {
       if(!isWhiteSpace(line)) {
         char *delim = " \t\n\r";
@@ -495,7 +498,6 @@ struct LynsynJtagDevice *lynsyn_getJtagDevices(char *filename) {
         char *irlentoken = strtok(NULL, delim);
         
         if(!idtoken || !irlentoken) {
-          free(line);
           return NULL;
         }
 
@@ -518,8 +520,6 @@ struct LynsynJtagDevice *lynsyn_getJtagDevices(char *filename) {
   device.idcode = 0;
   device.irlen = 0;
   devices[numDevices] = device;
-
-  free(line);
 
   return devices;
 }

@@ -1,10 +1,3 @@
-CFLAGS = -std=c++11 -g -O2 -Wall -I/usr/include/libusb-1.0/ -I../mcu/common/ -I../liblynsyn/
-LDFLAGS = -lusb-1.0
-
-CC = gcc
-CPP = g++
-LD = g++
-
 lynsyn_sampler : main.o ../liblynsyn/lynsyn.o
 	${LD} $^ ${LDFLAGS} -o $@
 

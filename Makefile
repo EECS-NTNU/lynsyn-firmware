@@ -25,6 +25,16 @@ else
 alldeps=host_software firmware
 endif
 
+export CFLAGS = -g -O2 -Wall -I../../argp-standalone-1.3/ -I/usr/include/libusb-1.0/ -I../mcu/common/ -I../liblynsyn/ -I/mingw64/include/libusb-1.0/
+export CXXFLAGS = -std=c++11 
+export LDFLAGS = -lusb-1.0 -largp -L../../argp-standalone-1.3/
+
+export CC = gcc
+export CPP = g++
+export LD = g++
+export AR = ar
+export RANLIB = ranlib
+
 .PHONY: host_software
 host_software:
 	mkdir -p bin
@@ -32,14 +42,14 @@ host_software:
 	cp lynsyn_tester/lynsyn_tester bin
 	cd lynsyn_sampler && $(MAKE)
 	cp lynsyn_sampler/lynsyn_sampler bin
-	cd lynsyn_xvc && $(MAKE)
-	cp lynsyn_xvc/lynsyn_xvc bin
+#	cd lynsyn_xvc && $(MAKE)
+#	cp lynsyn_xvc/lynsyn_xvc bin
 	cd libxsvf && $(MAKE) lynsyn_xsvf
 	cp libxsvf/lynsyn_xsvf bin
 	mkdir -p lynsyn_viewer/build
 	cd lynsyn_viewer/build && $(QMAKE) ..
 	cd lynsyn_viewer/build && $(MAKE)
-	cp lynsyn_viewer/build/lynsyn_viewer bin
+	cp lynsyn_viewer/build/release/lynsyn_viewer.exe bin
 	@echo
 	@echo "Host software compilation successful"
 	@echo
@@ -87,6 +97,6 @@ clean :
 	cd lynsyn_tester && $(MAKE) clean
 	cd lynsyn_sampler && $(MAKE) clean
 	cd lynsyn_xvc && $(MAKE) clean
-	cd lynsyn_viewer/build && $(MAKE) clean
+#	cd lynsyn_viewer/build && $(MAKE) clean
 	cd fpga && $(MAKE) clean
 	rm -rf liblynsyn/*.o bin fwbin

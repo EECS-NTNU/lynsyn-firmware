@@ -434,7 +434,11 @@ bool Profile::runProfiler() {
     maxpower[i] = 0;
   }
 
-  QSqlDatabase db = QSqlDatabase::database(dbConnection);
+  QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE", "thread");
+  db.setDatabaseName(dbFilename);
+  bool success = db.open();
+  assert(success);
+
   db.transaction();
 
   QSqlQuery query(db);

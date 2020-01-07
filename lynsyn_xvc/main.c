@@ -13,7 +13,6 @@
 #include <string.h>
 #include <time.h>
 #include <stdint.h>
-#include <sys/mman.h>
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/socket.h>

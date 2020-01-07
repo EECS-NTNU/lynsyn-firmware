@@ -114,10 +114,13 @@ int main(int argc, char *argv[]) {
     printf("Output file: %s\n", arguments.output.c_str());
   }
 
+  fflush(stdout);
+
   if(lynsyn_init()) {
     if(arguments.useBp || arguments.cores) {
       if(!lynsyn_jtagInit(lynsyn_getDefaultJtagDevices())) {
         printf("Can't init JTAG chain\n");
+	fflush(stdout);
         exit(-1);
       }
     }
@@ -174,6 +177,8 @@ int main(int argc, char *argv[]) {
   } else {
     printf("Can't open lynsyn\n");
   }
+
+  fflush(stdout);
 
   return 0;
 }

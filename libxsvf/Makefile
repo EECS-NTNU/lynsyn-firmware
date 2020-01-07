@@ -20,13 +20,9 @@
 #CC = ppc_6xx-gcc
 #CFLAGS += -DXSVFTOOL_RLMS_VLINE
 
-AR = ar
-RANLIB = ranlib
-CC = gcc
-
-CFLAGS += -Wall -Os -ggdb -MD -I../liblynsyn -I../mcu/common -I/usr/include/libusb-1.0/
+#CFLAGS += -Wall -Os -ggdb -MD
 #CFLAGS += -Wextra -Wno-unused-parameter -Werror
-LDLIBS+=-lusb-1.0
+#LDLIBS+=-lusb-1.0
 
 help:
 	@echo ""
@@ -65,7 +61,8 @@ libxsvf.a: tap.o statename.o memname.o svf.o xsvf.o scan.o play.o
 
 xsvftool-gpio: libxsvf.a xsvftool-gpio.o
 
-lynsyn_xsvf: libxsvf.a lynsyn_xsvf.o ../liblynsyn/lynsyn.o
+lynsyn_xsvf: lynsyn_xsvf.o ../liblynsyn/lynsyn.o libxsvf.a
+	$(CC) $^ $(LDFLAGS) -o $@
 
 xsvftool-ft232h: LDLIBS+=-lftdi -lm
 xsvftool-ft232h: LDFLAGS+=-pthread
