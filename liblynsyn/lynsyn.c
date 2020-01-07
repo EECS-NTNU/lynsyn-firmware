@@ -92,6 +92,7 @@ bool lynsyn_preinit(void) {
     }
     if(!found) {
       printf("Waiting for Lynsyn device\n");
+      fflush(stdout);
       sleep(1);
       numDevices = libusb_get_device_list(usbContext, &devs);
     }

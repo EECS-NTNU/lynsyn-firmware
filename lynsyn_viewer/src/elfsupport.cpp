@@ -38,12 +38,10 @@ Addr2Line ElfSupport::addr2Line(QString elfFile, uint64_t addr) {
 
   // create command
   addrStream << std::hex << addr;
-  cmd = std::string(qgetenv("CROSS_COMPILE").constData()) + "addr2line -C -f -a " + addrStream.str() + " -e " + elfFile.toUtf8().constData();
+  cmd = std::string(qgetenv("CROSS_COMPILE").constData()) + "addr2line -C -f " + addrStream.str() + " -e " + elfFile.toUtf8().constData();
+
   // run addr2line program
   if((fp = popen(cmd.c_str(), "r")) == NULL) goto error;
-
-  // discard first output line
-  if(readLine(buf, 1024, fp) == NULL) goto error;
 
   // get function name
   if(readLine(buf, 1024, fp) == NULL) goto error;
