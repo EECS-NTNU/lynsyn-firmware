@@ -23,6 +23,7 @@
 #include <QFileInfo>
 #include <QDataStream>
 #include <QProcess>
+
 #include "elfsupport.h"
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -31,34 +32,31 @@ Addr2Line ElfSupport::addr2Line(QString elfFile, uint64_t addr) {
   QString fileName = "Unknown";
   QString function = "Unknown";
   uint64_t lineNumber = 0;
-  char buf[1024];
-  FILE *fp;
-  std::stringstream addrStream;
-  std::string cmd;
 
   // create command
-  addrStream << std::hex << addr;
-  cmd = std::string(qgetenv("CROSS_COMPILE").constData()) + "addr2line -C -f " + addrStream.str() + " -e " + elfFile.toUtf8().constData();
+  QString cmd =
+    QString::fromStdString(qgetenv("CROSS_COMPILE").toStdString()) +
+    "addr2line -C -f " + QString::number(addr, 16) + " -e " + elfFile;
 
   // run addr2line program
-  if((fp = popen(cmd.c_str(), "r")) == NULL) goto error;
+  QProcess p;
+  p.start(cmd);
+  p.waitForFinished();
+  QString buf = QString::fromStdString(p.readAllStandardOutput().toStdString());
+  QStringList lines = buf.split(QRegExp("\n|\r\n|\r"));
 
   // get function name
-  if(readLine(buf, 1024, fp) == NULL) goto error;
-  function = QString::fromUtf8(buf).simplified();
+  if(lines.size() < 2) goto error;
+
+  function = lines[0].simplified();
   if(function == "??") function = "Unknown";
 
   // get filename and linenumber
-  if(readLine(buf, 1024, fp) == NULL) goto error;
-
   {
-    QString qbuf = QString::fromUtf8(buf);
+    QString qbuf = lines[1];
     fileName = qbuf.left(qbuf.indexOf(':'));
     lineNumber = qbuf.mid(qbuf.indexOf(':') + 1).toULongLong();
   }
-
-  // close stream
-  pclose(fp);
 
   if((function != "Unknown") || (lineNumber != 0)) {
     Addr2Line addr2line = Addr2Line(fileName, elfFile, function, lineNumber);
@@ -71,27 +69,27 @@ Addr2Line ElfSupport::addr2Line(QString elfFile, uint64_t addr) {
 }
 
 uint64_t ElfSupport::lookupSymbol(QString symbol) {
-  FILE *fp;
-  char buf[1024];
-
   for(auto elfFile : elfFiles) {
     // create command line
     QString cmd = QString("nm ") + elfFile;
 
     // run program
-    if((fp = popen(cmd.toUtf8().constData(), "r")) == NULL) goto error;
+    QProcess p;
+    p.start(cmd);
+    p.waitForFinished();
+    QString buf = QString::fromStdString(p.readAllStandardOutput().toStdString());
+    QStringList lines = buf.split(QRegExp("\n|\r\n|\r"));
 
-    while(!feof(fp) && !ferror(fp)) {
-      if(readLine(buf, 1024, fp)) {
-        QStringList line = QString::fromUtf8(buf).split(' ');
-        if(line[2].trimmed() == symbol) {
-          return line[0].toULongLong(0, 16);
+    for(auto line : lines) {
+      QStringList tokens = line.split(' ');
+      if(tokens.size() > 2) {
+        if(tokens[2].trimmed() == symbol) {
+          return tokens[0].toULongLong(0, 16);
         }
       }
     }
   }
 
- error:
   return 0;
 }
 

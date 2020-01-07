@@ -1,7 +1,7 @@
 ###############################################################################
 # Settings for the host tools
 
-export QMAKE = qmake CONFIG+=release
+export QMAKE = qmake CONFIG+=debug
 
 ###############################################################################
 # Settings for the firmware
@@ -51,23 +51,28 @@ host_software: $(HOST_EXECUTABLES)
 	@echo "Host software compilation successful"
 	@echo
 
+.PHONY: bin/lynsyn_tester
 bin/lynsyn_tester:
 	mkdir -p bin
 	cd lynsyn_tester && $(MAKE)
 	cp lynsyn_tester/lynsyn_tester bin
 
+.PHONY: bin/lynsyn_sampler
 bin/lynsyn_sampler:
 	cd lynsyn_sampler && $(MAKE)
 	cp lynsyn_sampler/lynsyn_sampler bin
 
+.PHONY: bin/lynsyn_xvc
 bin/lynsyn_xvc:
 	cd lynsyn_xvc && $(MAKE)
 	cp lynsyn_xvc/lynsyn_xvc bin
 
+.PHONY: bin/lynsyn_xsvf
 bin/lynsyn_xsvf:
 	cd libxsvf && $(MAKE) lynsyn_xsvf
 	cp libxsvf/lynsyn_xsvf bin
 
+.PHONY: bin/lynsyn_viewer
 bin/lynsyn_viewer:
 	mkdir -p lynsyn_viewer/build
 	cd lynsyn_viewer/build && $(QMAKE) ..
@@ -86,11 +91,13 @@ firmware: fwbin/lynsyn_boot.bin fwbin/lynsyn_main.bin
 	@echo "Firmware compilation successful"
 	@echo
 
+.PHONY: fwbin/lynsyn_boot.bin
 fwbin/lynsyn_boot.bin:
 	mkdir -p fwbin
 	cd mcu/boot && $(MAKE)
 	cp mcu/boot/lynsyn_boot.bin fwbin
 
+.PHONY: fwbin/lynsyn_main.bin
 fwbin/lynsyn_main.bin:
 	mkdir -p fwbin
 	cd mcu/main && $(MAKE)
