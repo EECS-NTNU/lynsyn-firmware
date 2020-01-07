@@ -25,9 +25,17 @@ else
 alldeps=host_software firmware
 endif
 
-export CFLAGS = -g -O2 -Wall -I../../argp-standalone-1.3/ -I/usr/include/libusb-1.0/ -I../mcu/common/ -I../liblynsyn/ -I/mingw64/include/libusb-1.0/
+ifeq ($(OS),Windows_NT)
+export CFLAGS = -I../../argp-standalone-1.3/ -I/mingw64/include/libusb-1.0/
+export LDFLAGS = -largp -L../../argp-standalone-1.3/
+HOST_EXECUTABLES=bin/lynsyn_tester bin/lynsyn_sampler bin/lynsyn_xsvf bin/lynsyn_viewer
+else
+HOST_EXECUTABLES=bin/lynsyn_tester bin/lynsyn_sampler bin/lynsyn_xvc bin/lynsyn_xsvf bin/lynsyn_viewer
+endif
+
+export CFLAGS += -g -O2 -Wall -I/usr/include/libusb-1.0/ -I../mcu/common/ -I../liblynsyn/ 
+export LDFLAGS += -lusb-1.0 
 export CXXFLAGS = -std=c++11 
-export LDFLAGS = -lusb-1.0 -largp -L../../argp-standalone-1.3/
 
 export CC = gcc
 export CPP = g++
@@ -35,35 +43,60 @@ export LD = g++
 export AR = ar
 export RANLIB = ranlib
 
+###############################################################################
+
 .PHONY: host_software
-host_software:
-	mkdir -p bin
-	cd lynsyn_tester && $(MAKE)
-	cp lynsyn_tester/lynsyn_tester bin
-	cd lynsyn_sampler && $(MAKE)
-	cp lynsyn_sampler/lynsyn_sampler bin
-#	cd lynsyn_xvc && $(MAKE)
-#	cp lynsyn_xvc/lynsyn_xvc bin
-	cd libxsvf && $(MAKE) lynsyn_xsvf
-	cp libxsvf/lynsyn_xsvf bin
-	mkdir -p lynsyn_viewer/build
-	cd lynsyn_viewer/build && $(QMAKE) ..
-	cd lynsyn_viewer/build && $(MAKE)
-	cp lynsyn_viewer/build/release/lynsyn_viewer.exe bin
+host_software: $(HOST_EXECUTABLES)
 	@echo
 	@echo "Host software compilation successful"
 	@echo
 
+bin/lynsyn_tester:
+	mkdir -p bin
+	cd lynsyn_tester && $(MAKE)
+	cp lynsyn_tester/lynsyn_tester bin
+
+bin/lynsyn_sampler:
+	cd lynsyn_sampler && $(MAKE)
+	cp lynsyn_sampler/lynsyn_sampler bin
+
+bin/lynsyn_xvc:
+	cd lynsyn_xvc && $(MAKE)
+	cp lynsyn_xvc/lynsyn_xvc bin
+
+bin/lynsyn_xsvf:
+	cd libxsvf && $(MAKE) lynsyn_xsvf
+	cp libxsvf/lynsyn_xsvf bin
+
+bin/lynsyn_viewer:
+	mkdir -p lynsyn_viewer/build
+	cd lynsyn_viewer/build && $(QMAKE) ..
+	cd lynsyn_viewer/build && $(MAKE)
+ifeq ($(OS),Windows_NT)
+	cp lynsyn_viewer/build/release/lynsyn_viewer bin
+else
+	cp lynsyn_viewer/build/lynsyn_viewer bin
+endif
+
+###############################################################################
+
 .PHONY: firmware
-firmware:
-	mkdir -p fwbin
-	cd mcu/boot && $(MAKE)
-	cp mcu/boot/lynsyn_boot.bin fwbin
-	cd mcu/main && $(MAKE)
-	cp mcu/main/lynsyn_main.bin fwbin
+firmware: fwbin/lynsyn_boot.bin fwbin/lynsyn_main.bin
 	@echo
 	@echo "Firmware compilation successful"
 	@echo
+
+fwbin/lynsyn_boot.bin:
+	mkdir -p fwbin
+	cd mcu/boot && $(MAKE)
+	cp mcu/boot/lynsyn_boot.bin fwbin
+
+fwbin/lynsyn_main.bin:
+	mkdir -p fwbin
+	cd mcu/main && $(MAKE)
+	cp mcu/main/lynsyn_main.bin fwbin
+
+###############################################################################
 
 .PHONY: synthesis
 synthesis:
@@ -74,8 +107,12 @@ synthesis:
 	@echo "FPGA synthesis successful"
 	@echo
 
+###############################################################################
+
 .PHONY: all
 all: $(alldeps)
+
+###############################################################################
 
 .PHONY: install
 install: host_software install_hw
@@ -85,18 +122,29 @@ install: host_software install_hw
 	@echo "Software and hardware installed"
 	@echo
 
+###############################################################################
+
 .PHONY: install_hw
 install_hw:
 	cp udev/48-lynsyn.rules /etc/udev/rules.d
 	udevadm control --reload-rules
 
+###############################################################################
+
 .PHONY : clean
-clean :
+clean : fwclean hostclean
+
+.PHONY : fwclean
+fwclean :
 	cd mcu/boot && $(MAKE) clean
 	cd mcu/main && $(MAKE) clean
+
+.PHONY : hostclean
+hostclean:
 	cd lynsyn_tester && $(MAKE) clean
 	cd lynsyn_sampler && $(MAKE) clean
+	cd libxsvf && $(MAKE) clean
 	cd lynsyn_xvc && $(MAKE) clean
-#	cd lynsyn_viewer/build && $(MAKE) clean
+	rm -rf lynsyn_viewer/build
 	cd fpga && $(MAKE) clean
 	rm -rf liblynsyn/*.o bin fwbin
