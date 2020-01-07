@@ -1,7 +1,7 @@
 ###############################################################################
 # Settings for the host tools
 
-export QMAKE = qmake CONFIG+=debug
+export QMAKE = qmake CONFIG+=release
 
 ###############################################################################
 # Settings for the firmware

@@ -19,4 +19,6 @@ cp /c/msys64/mingw64/bin/LIBUSB-1.0.DLL bin/
 cp /c/msys64/mingw64/bin/LIBWINPTHREAD-1.DLL bin/
 cp /c/msys64/mingw64/bin/LIBZSTD.DLL bin/
 cp /c/msys64/mingw64/bin/ZLIB1.DLL bin/
+cp /mingw64/bin/addr2line bin/
+cp /mingw64/bin/nm bin/
 cp .jtagdevices bin/jtagdevices
