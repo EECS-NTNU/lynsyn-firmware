@@ -1,3 +1,5 @@
+#!/bin/bash
+
 windeployqt bin/lynsyn_viewer.exe
 cp /c/msys64/mingw64/bin/LIBBZ2-1.DLL bin/
 cp /c/msys64/mingw64/bin/LIBDOUBLE-CONVERSION.DLL bin/
@@ -22,3 +24,5 @@ cp /c/msys64/mingw64/bin/ZLIB1.DLL bin/
 cp /mingw64/bin/addr2line bin/
 cp /mingw64/bin/nm bin/
 cp .jtagdevices bin/jtagdevices
+cp ../zadig-2.4.exe bin/
+cp COPYING bin/COPYING.txt

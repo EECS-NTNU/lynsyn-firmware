@@ -111,7 +111,8 @@ void MainWindow::about() {
   QMessageBox::about(this, "About Lynsyn Viewer",
                      QString("Lynsyn Viewer V") + QString::number(VERSION) + "\n"
                      "A performance measurement and analysis utility\n"
-                     "NTNU, 2019");
+                     "Copyright 2020 NTNU\n"
+                     "License: GPL Version 3");
 }
 
 void MainWindow::importCsv() {
