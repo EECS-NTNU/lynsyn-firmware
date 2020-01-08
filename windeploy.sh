@@ -1,26 +1,26 @@
 #!/bin/bash
 
 windeployqt bin/lynsyn_viewer.exe
-cp /c/msys64/mingw64/bin/LIBBZ2-1.DLL bin/
-cp /c/msys64/mingw64/bin/LIBDOUBLE-CONVERSION.DLL bin/
-cp /c/msys64/mingw64/bin/LIBFREETYPE-6.DLL bin/
-cp /c/msys64/mingw64/bin/LIBGCC_S_SEH-1.DLL bin/
-cp /c/msys64/mingw64/bin/LIBGLIB-2.0-0.DLL bin/
-cp /c/msys64/mingw64/bin/LIBGRAPHITE2.DLL bin/
-cp /c/msys64/mingw64/bin/LIBHARFBUZZ-0.DLL bin/
-cp /c/msys64/mingw64/bin/LIBICONV-2.DLL bin/
-cp /c/msys64/mingw64/bin/LIBICUDT65.DLL bin/
-cp /c/msys64/mingw64/bin/LIBICUIN65.DLL bin/
-cp /c/msys64/mingw64/bin/LIBICUUC65.DLL bin/
-cp /c/msys64/mingw64/bin/LIBINTL-8.DLL bin/
-cp /c/msys64/mingw64/bin/LIBPCRE-1.DLL bin/
-cp /c/msys64/mingw64/bin/LIBPCRE2-16-0.DLL bin/
-cp /c/msys64/mingw64/bin/LIBPNG16-16.DLL bin/
-cp /c/msys64/mingw64/bin/LIBSTDC++-6.DLL bin/
-cp /c/msys64/mingw64/bin/LIBUSB-1.0.DLL bin/
-cp /c/msys64/mingw64/bin/LIBWINPTHREAD-1.DLL bin/
-cp /c/msys64/mingw64/bin/LIBZSTD.DLL bin/
-cp /c/msys64/mingw64/bin/ZLIB1.DLL bin/
+cp /c/msys64/mingw64/bin/libbz2-1.dll bin/
+cp /c/msys64/mingw64/bin/libdouble-conversion.dll bin/
+cp /c/msys64/mingw64/bin/libfreetype-6.dll bin/
+cp /c/msys64/mingw64/bin/libgcc_s_seh-1.dll bin/
+cp /c/msys64/mingw64/bin/libglib-2.0-0.dll bin/
+cp /c/msys64/mingw64/bin/libgraphite2.dll bin/
+cp /c/msys64/mingw64/bin/libharfbuzz-0.dll bin/
+cp /c/msys64/mingw64/bin/libiconv-2.dll bin/
+cp /c/msys64/mingw64/bin/libicudt65.dll bin/
+cp /c/msys64/mingw64/bin/libicuin65.dll bin/
+cp /c/msys64/mingw64/bin/libicuuc65.dll bin/
+cp /c/msys64/mingw64/bin/libintl-8.dll bin/
+cp /c/msys64/mingw64/bin/libpcre-1.dll bin/
+cp /c/msys64/mingw64/bin/libpcre2-16-0.dll bin/
+cp /c/msys64/mingw64/bin/libpng16-16.dll bin/
+cp /c/msys64/mingw64/bin/libstdc++-6.dll bin/
+cp /c/msys64/mingw64/bin/libusb-1.0.dll bin/
+cp /c/msys64/mingw64/bin/libwinpthread-1.dll bin/
+cp /c/msys64/mingw64/bin/libzstd.dll bin/
+cp /c/msys64/mingw64/bin/zlib1.dll bin/
 cp /mingw64/bin/addr2line bin/
 cp /mingw64/bin/nm bin/
 cp .jtagdevices bin/jtagdevices
