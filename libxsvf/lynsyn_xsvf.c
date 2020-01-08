@@ -1,6 +1,7 @@
 /*
- *  Lib(X)SVF  -  A library for implementing SVF and XSVF JTAG players
+ *  lynsyn_xsvf  -  An SVF and XSVF JTAG player for Lynsyn boards
  *
+ *  Copyright (C) 2019  Asbjørn Djupdal, NTNU
  *  Copyright (C) 2009  RIEGL Research ForschungsGmbH
  *  Copyright (C) 2009  Clifford Wolf <clifford@clifford.at>
  *  

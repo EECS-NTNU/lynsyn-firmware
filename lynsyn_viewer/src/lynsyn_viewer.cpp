@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- *  This file is part of the Lynsyn Viewer
+ *  This file is part of the Lynsyn host tools
  *
  *  Copyright 2019 Asbjørn Djupdal, NTNU
  *

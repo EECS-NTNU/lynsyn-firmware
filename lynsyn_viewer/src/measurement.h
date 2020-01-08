@@ -1,8 +1,8 @@
 /******************************************************************************
  *
- *  This file is part of the TULIPP Analysis Utility
+ *  This file is part of the Lynsyn host tools
  *
- *  Copyright 2018 Asbjørn Djupdal, NTNU, TULIPP EU Project
+ *  Copyright 2019 Asbjørn Djupdal, NTNU
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by

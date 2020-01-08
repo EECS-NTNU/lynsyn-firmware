@@ -2,7 +2,7 @@
  *
  *  This file is part of the Lynsyn PMU firmware.
  *
- *  Copyright 2018 Asbjørn Djupdal, NTNU, TULIPP EU Project
+ *  Copyright 2018-2019 Asbjørn Djupdal, NTNU
  *
  *  Lynsyn is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
