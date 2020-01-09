@@ -41,8 +41,11 @@
 
 #define MAX_TRIES 20
 
-#define CURRENT_SENSOR_GAIN 100 // 20
-#define CURRENT_SENSOR_FACTOR (0.125/5) // 0.125
+#define CURRENT_SENSOR_GAIN_V3_1 20
+#define CURRENT_SENSOR_FACTOR_V3_1 0.125
+
+#define CURRENT_SENSOR_GAIN_V3 100
+#define CURRENT_SENSOR_FACTOR_V3 (0.125/5)
 
 #define CURRENT_SENSOR_GAIN_V2 20
 #define CURRENT_SENSOR_FACTOR_V2 0.125
@@ -97,8 +100,6 @@ bool lynsyn_preinit(void) {
     printf("Init Error\n");
     return false;
   }
-
-  libusb_set_debug(usbContext, 3);
 
   bool found = false;
   int numDevices = libusb_get_device_list(usbContext, &devs);
@@ -741,8 +742,10 @@ double getCurrent(int16_t current, int sensor) {
 
   v = (((double)current-offset) * (double)LYNSYN_REF_VOLTAGE / (double)LYNSYN_MAX_SENSOR_VALUE) * gain;
 
-  if(hwVer == HW_VERSION_3_0) {
-    vs = v / CURRENT_SENSOR_GAIN;
+  if(hwVer >= HW_VERSION_3_1) {
+    vs = v / CURRENT_SENSOR_GAIN_V3_1;
+  } else if(hwVer == HW_VERSION_3_0) {
+    vs = v / CURRENT_SENSOR_GAIN_V3;
   } else {
     vs = v / CURRENT_SENSOR_GAIN_V2;
   }
@@ -773,7 +776,7 @@ void convertSample(struct LynsynSample *dest, struct SampleReplyPacket *source) 
   for(unsigned i = 0; i < MAX_SENSORS; i++) {
     if(i < lynsyn_numSensors()) {
       dest->current[i] = getCurrent(source->channel[getCurrentChannel(i)], i);
-      if(hwVer == HW_VERSION_3_0) {
+      if(hwVer >= HW_VERSION_3_0) {
         dest->voltage[i] = getVoltage(source->channel[getVoltageChannel(i)], i);
       } else {
         dest->voltage[i] = 0;
@@ -787,7 +790,7 @@ void convertSample(struct LynsynSample *dest, struct SampleReplyPacket *source) 
 }
 
 uint8_t getCurrentChannel(uint8_t sensor) {
-  if(hwVer == HW_VERSION_3_0) {
+  if(hwVer >= HW_VERSION_3_0) {
     return (2 - sensor) * 2;
   } else {
     return sensor;
@@ -795,13 +798,15 @@ uint8_t getCurrentChannel(uint8_t sensor) {
 }
 
 uint8_t getVoltageChannel(uint8_t sensor) {
-  assert(hwVer == HW_VERSION_3_0);
+  assert(hwVer >= HW_VERSION_3_0);
   return ((2 - sensor) * 2) + 1;
 }
 
 double lynsyn_getMaxCurrent(double rl) {
-  if(hwVer == HW_VERSION_3_0) {
-    return CURRENT_SENSOR_FACTOR/(double)rl;
+  if(hwVer >= HW_VERSION_3_1) {
+    return CURRENT_SENSOR_FACTOR_V3_1/(double)rl;
+  } else if(hwVer == HW_VERSION_3_0) {
+    return CURRENT_SENSOR_FACTOR_V3/(double)rl;
   } else {
     return CURRENT_SENSOR_FACTOR_V2/(double)rl;
   }
@@ -816,7 +821,7 @@ unsigned lynsyn_numCores(void) {
 }
 
 unsigned lynsyn_numSensors(void) {
-  if(hwVer == HW_VERSION_3_0) {
+  if(hwVer >= HW_VERSION_3_0) {
     return 3;
   } else {
     return 7;

@@ -458,6 +458,7 @@ bool Profile::runProfiler() {
   QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE", "thread");
   db.setDatabaseName(dbFilename);
   bool success = db.open();
+  Q_UNUSED(success);
   assert(success);
 
   db.transaction();

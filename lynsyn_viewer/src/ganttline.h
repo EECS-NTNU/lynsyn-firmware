@@ -24,6 +24,7 @@
 
 #include <QGraphicsScene>
 #include <QtWidgets>
+#include <QtGlobal>
 
 #include "profile.h"
 
@@ -48,7 +49,11 @@ public:
     maxTime = 0;
 
     QFontMetrics fm(font);
+#if QT_VERSION < QT_VERSION_CHECK(5, 11, 0)
     textWidth = fm.width(id);
+#else
+    textWidth = fm.horizontalAdvance(id);
+#endif
     textHeight = fm.height();
   }
 

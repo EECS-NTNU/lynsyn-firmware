@@ -43,6 +43,10 @@ bool configExists(char *id) {
   return false;
 }
 
+int16_t getInt16(char *id) {
+  return 0;
+}
+
 uint32_t getUint32(char *id) {
   if(strcmp(id, "hwver") == 0) {
     return 0x30;
@@ -67,6 +71,10 @@ double getDouble(char *id) {
 
 char *getString(char *id) {
   return "";
+}
+
+void setInt16(char *id, uint32_t val) {
+  printf("Setting %s to %d\n", id, val);
 }
 
 void setUint32(char *id, uint32_t val) {

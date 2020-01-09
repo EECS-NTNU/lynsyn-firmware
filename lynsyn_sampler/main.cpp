@@ -26,8 +26,15 @@
 #include <string.h>
 #include <iostream>
 #include <iomanip>
+#include <inttypes.h>
 
 #include <lynsyn.h>
+
+#ifdef _WIN32
+#define LONGLONGHEX "I64x"
+#else
+#define LONGLONGHEX PRIx64
+#endif
 
 struct TraceHeader {
   uint32_t magic;
@@ -123,8 +130,8 @@ int main(int argc, char *argv[]) {
 
   if(arguments.useBp) {
     printf("Sampling PC and power\n");
-    printf("From breakpoint %lx to breakpoint %lx", arguments.startAddr, arguments.endAddr);
-    if(arguments.useFrameBp) printf(" using frame breakpoint %lx\n", arguments.frameAddr);
+    printf("From breakpoint %" LONGLONGHEX " to breakpoint %" LONGLONGHEX, arguments.startAddr, arguments.endAddr);
+    if(arguments.useFrameBp) printf(" using frame breakpoint %" LONGLONGHEX "\n", arguments.frameAddr);
     else printf("\n");
     printf("Maximum duration %fs\n", arguments.duration);
     printf("Output file: %s\n", arguments.output.c_str());

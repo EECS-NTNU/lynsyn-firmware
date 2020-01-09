@@ -33,17 +33,24 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
+#include <inttypes.h>
 
 #include "lynsyn.h"
 
 #define SENSORS_BOARD_2 7
 #define SENSORS_BOARD_3 3
 
+#ifdef _WIN32
+#define LONGLONGHEX "I64x"
+#else
+#define LONGLONGHEX PRIx64
+#endif
+
 ///////////////////////////////////////////////////////////////////////////////
 
 double rsDefault3[SENSORS_BOARD_3] = {0.025, 0.05, 0.1};
 double rsDefault2[SENSORS_BOARD_2] = {0.025, 0.05, 0.05, 0.1, 0.1, 1, 10};
-unsigned hwVersion = HW_VERSION_3_0;
+unsigned hwVersion = HW_VERSION_3_1;
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -544,7 +551,7 @@ bool live(void) {
     lynsyn_getSample(&sample, true, 0);
 
     for(int i = 0; i < LYNSYN_MAX_CORES; i++) {
-      printf("%lx ", sample.pc[i]);
+      printf("%" LONGLONGHEX, sample.pc[i]);
     }
     printf(" : ");
     for(int i = 0; i < LYNSYN_MAX_SENSORS; i++) {
@@ -611,13 +618,14 @@ int main(int argc, char *argv[]) {
   struct arguments arguments;
   arguments.procedure = -1;
   arguments.acceptance = 0.01;
-  arguments.board = 3;
+  arguments.board = 31;
 
   argp_parse (&argp, argc, argv, 0, 0, &arguments);
 
   switch(arguments.board) {
     case 2: printf("Lynsyn Original\n"); hwVersion = HW_VERSION_2_2; break;
-    case 3: printf("Lynsyn Lite\n"); hwVersion = HW_VERSION_3_0; break;
+    case 3: printf("Lynsyn Lite (first prototype)\n"); hwVersion = HW_VERSION_3_0; break;
+    case 31: printf("Lynsyn Lite\n"); hwVersion = HW_VERSION_3_1; break;
     default: printf("ERROR: Unknown board\n"); fflush(stdout); exit(1);
   }
 

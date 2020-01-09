@@ -31,6 +31,7 @@
 #define HW_VERSION_2_1 0x21
 #define HW_VERSION_2_2 0x22
 #define HW_VERSION_3_0 0x30
+#define HW_VERSION_3_1 0x31
 
 #define BOOT_VERSION_1_0 0x10
 #define BOOT_VERSION_1_1 0x11

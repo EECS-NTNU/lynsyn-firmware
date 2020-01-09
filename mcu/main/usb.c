@@ -23,6 +23,7 @@
 
 #include <em_usb.h>
 #include <em_msc.h>
+#include <inttypes.h>
 
 #include "lynsyn_main.h"
 #include "usb.h"
@@ -289,27 +290,15 @@ static void initJtag(struct JtagInitRequestPacket *jtagInitRequest) {
 static void setBreakpoint(struct BreakpointRequestPacket *bpReq) {
   switch(bpReq->bpType) {
     case BP_TYPE_START:
-#ifdef __linux__
-      printf("Set start BP %lx\n", bpReq->addr);
-#else
-      printf("Set start BP %llx\n", bpReq->addr);
-#endif
+      printf("Set start BP %" PRIx64 "\n", bpReq->addr);
       setBp(START_BP, bpReq->addr);
       break;
     case BP_TYPE_STOP:
-#ifdef __linux__
-      printf("Set stop BP %lx\n", bpReq->addr);
-#else
-      printf("Set stop BP %llx\n", bpReq->addr);
-#endif
+      printf("Set stop BP %" PRIx64 "\n", bpReq->addr);
       setBp(STOP_BP, bpReq->addr);
       break;
     case BP_TYPE_MARK:
-#ifdef __linux__
-      printf("Set mark BP %lx\n", bpReq->addr);
-#else
-      printf("Set mark BP %llx\n", bpReq->addr);
-#endif
+      printf("Set mark BP %" PRIx64 "\n", bpReq->addr);
       markBp = bpReq->addr;
       break;
   }
@@ -334,11 +323,7 @@ static void startSampling(struct StartSamplingRequestPacket *startSamplingReq) {
   useStopBp = !(startSamplingReq->flags & SAMPLING_FLAG_PERIOD);
   bool useMarkBp = startSamplingReq->flags & SAMPLING_FLAG_MARK;
 
-#ifdef __linux__
-  printf("Starting sample mode (%lx)\n", startSamplingReq->flags);
-#else
-  printf("Starting sample mode (%llx)\n", startSamplingReq->flags);
-#endif
+  printf("Starting sample mode (%" PRIx64 ")\n", startSamplingReq->flags);
 
   setLed(0);
 
@@ -367,11 +352,7 @@ static void startSampling(struct StartSamplingRequestPacket *startSamplingReq) {
   int64_t now = calculateTime();
   sampleStop = startSamplingReq->samplePeriod + now;
 
-#ifdef __linux__
-  printf("Sampling from %ld to %ld\n", now, sampleStop);
-#else
   printf("Sampling from %lld to %lld\n", now, sampleStop);
-#endif
 }
 
 static void getSample(struct GetSampleRequestPacket *getSampleReq) {

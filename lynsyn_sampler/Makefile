@@ -5,7 +5,7 @@ lynsyn_sampler : main.o ../liblynsyn/lynsyn.o
 	${CC} -std=gnu99 ${CFLAGS} -c $< -o $@
 
 %.o : %.cpp
-	${CPP} ${CFLAGS} -c $< -o $@
+	${CPP} ${CXXFLAGS} -c $< -o $@
 
 %.o : %.s
 	${AS} ${ASFLAGS} -c $< -o $@

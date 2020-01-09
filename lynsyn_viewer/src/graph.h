@@ -24,6 +24,7 @@
 
 #include <QGraphicsScene>
 #include <QtWidgets>
+#include <QtGlobal>
 
 #include "lynsyn_viewer.h"
 #include "profile.h"
@@ -70,8 +71,13 @@ public:
     this->highTimeValue = highTimeValue;
 
     QFontMetrics fm(font);
+#if QT_VERSION < QT_VERSION_CHECK(5, 11, 0)
     unsigned w1 = fm.width(QString::number(lowMeasurementValue) + "W");
     unsigned w2 = fm.width(QString::number(highMeasurementValue) + "W");
+#else
+    unsigned w1 = fm.horizontalAdvance(QString::number(lowMeasurementValue) + "W");
+    unsigned w2 = fm.horizontalAdvance(QString::number(highMeasurementValue) + "W");
+#endif
     if(w1 > w2) textWidth = w1;
     else textWidth = w2;
     textHeight = fm.height();

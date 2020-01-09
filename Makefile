@@ -35,7 +35,7 @@ endif
 
 export CFLAGS += -g -O2 -Wall -I/usr/include/libusb-1.0/ -I../mcu/common/ -I../liblynsyn/ 
 export LDFLAGS += -lusb-1.0 
-export CXXFLAGS = -std=c++11 
+export CXXFLAGS = -std=gnu++11 $(CFLAGS)
 
 export CC = gcc
 export CPP = g++

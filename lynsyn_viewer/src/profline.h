@@ -61,7 +61,7 @@ public:
   }
 
   QVector<Measurement> *getMeasurements() {
-    qSort(measurements.begin(), measurements.end(), lessThan);
+    std::sort(measurements.begin(), measurements.end(), lessThan);
     return &measurements;
   }
 

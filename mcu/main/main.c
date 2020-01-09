@@ -24,6 +24,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdarg.h>
+#include <inttypes.h>
 
 #include <em_device.h>
 #include <em_chip.h>
@@ -96,11 +97,7 @@ int main(void) {
 
   configInit();
 
-#ifdef __linux__
-  printf("Hardware V%x.%x Firmware %s\n", (getUint32("hwver") & 0xf0) >> 4, getUint32("hwver") & 0xf, SW_VERSION_STRING);
-#else
-  printf("Hardware V%lx.%lx Firmware %s\n", (getUint32("hwver") & 0xf0) >> 4, getUint32("hwver") & 0xf, SW_VERSION_STRING);
-#endif
+  printf("Hardware V%" PRIx32 ".%" PRIx32 " Firmware %s\n", (getUint32("hwver") & 0xf0) >> 4, getUint32("hwver") & 0xf, SW_VERSION_STRING);
 
   jtagInitLowLevel();
   adcInit();
