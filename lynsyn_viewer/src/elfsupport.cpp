@@ -33,27 +33,39 @@ Addr2Line ElfSupport::addr2Line(QString elfFile, uint64_t addr) {
   QString function = "Unknown";
   uint64_t lineNumber = 0;
 
-  // create command
-  QString cmd =
-    QString::fromStdString(qgetenv("CROSS_COMPILE").toStdString()) +
-    "addr2line -C -f " + QString::number(addr, 16) + " -e " + elfFile;
+  QProcess *p;
 
-  // run addr2line program
-  QProcess p;
-  p.start(cmd);
-  p.waitForFinished();
-  QString buf = QString::fromStdString(p.readAllStandardOutput().toStdString());
-  QStringList lines = buf.split(QRegExp("\n|\r\n|\r"));
+  if(elfProcesses.find(elfFile) == elfProcesses.end()) {
+    // create command
+    QString cmd = QString::fromStdString(qgetenv("CROSS_COMPILE").toStdString()) + "addr2line -C -f -e " + elfFile;
+
+    // run addr2line program
+    p = new QProcess();
+    elfProcesses[elfFile] = p;
+    p->start(cmd);
+
+  } else {
+    p = elfProcesses[elfFile];
+  }
+
+  char buf[1024];
+
+  // write address
+  QByteArray addressString = QString::number(addr, 16).toUtf8() + "\n";
+  p->write(addressString);
 
   // get function name
-  if(lines.size() < 2) goto error;
-
-  function = lines[0].simplified();
+  p->waitForReadyRead();
+  p->readLine(buf, sizeof(buf));
+  function = QString::fromUtf8(buf).simplified();
+    
   if(function == "??") function = "Unknown";
 
   // get filename and linenumber
   {
-    QString qbuf = lines[1];
+    p->readLine(buf, sizeof(buf));
+    QString qbuf = QString::fromUtf8(buf).simplified();
+
     fileName = qbuf.left(qbuf.indexOf(':'));
     lineNumber = qbuf.mid(qbuf.indexOf(':') + 1).toULongLong();
   }
@@ -64,7 +76,6 @@ Addr2Line ElfSupport::addr2Line(QString elfFile, uint64_t addr) {
     return addr2line;
   }
 
- error:
   return Addr2Line();
 }
 
@@ -95,6 +106,14 @@ uint64_t ElfSupport::lookupSymbol(QString symbol) {
 
 ///////////////////////////////////////////////////////////////////////////////
 
+ElfSupport::~ElfSupport() {
+  for(auto p : elfProcesses.values()) {
+    p->kill();
+    p->waitForFinished();
+    delete p;
+  }
+}
+
 char *ElfSupport::readLine(char *s, int size, FILE *stream) {
   char *ret = NULL;
 
@@ -108,6 +127,14 @@ char *ElfSupport::readLine(char *s, int size, FILE *stream) {
   }
 
   return ret;
+}
+
+void ElfSupport::addKallsyms(QString symsFile) {
+  QFile file(symsFile);
+  if(file.open(QIODevice::ReadOnly)) {
+    QString buf = QString::fromStdString(file.readAll().toStdString());
+    kallsyms = buf.split(QRegExp("\n|\r\n|\r"));
+  }
 }
 
 void ElfSupport::setPc(uint64_t pc) {
@@ -131,37 +158,27 @@ void ElfSupport::setPc(uint64_t pc) {
   }
 
   // check if pc exists in kallsyms file
-  if(!symsFile.trimmed().isEmpty()) {
-    QFile file(symsFile);
-    if(file.open(QIODevice::ReadOnly)) {
+  QString lastSymbol;
+  quint64 lastAddress = ~0;
 
-      QString lastSymbol;
-      quint64 lastAddress = ~0;
+  for(const auto& line : kallsyms) {
+    QStringList tokens = line.split(' ');
 
-      while(!file.atEnd()) {
-        QString line = file.readLine();
+    if(tokens.size() >= 3) {
+      quint64 address = tokens[0].toULongLong(nullptr, 16);
+      //char symbolType = tokens[1][0].toLatin1();
+      QString symbol = tokens[2].trimmed();
 
-        QStringList tokens = line.split(' ');
-
-        if(tokens.size() >= 3) {
-          quint64 address = tokens[0].toULongLong(nullptr, 16);
-          //char symbolType = tokens[1][0].toLatin1();
-          QString symbol = tokens[2].trimmed();
-
-          if(pc < address) {
-            file.close();
-            if(lastAddress <= pc) {
-              addr2line = Addr2Line("kallsyms", "kallsyms", symbol, 0);
-              addr2lineCache[pc] = addr2line;
-              return;
-            } else goto error;
-          }
-
-          lastSymbol = symbol;
-          lastAddress = address;
-        }
+      if(pc < address) {
+        if(lastAddress <= pc) {
+          addr2line = Addr2Line("kallsyms", "kallsyms", lastSymbol, 0);
+          addr2lineCache[pc] = addr2line;
+          return;
+        } else goto error;
       }
-      file.close();
+
+      lastAddress = address;
+      lastSymbol = symbol;
     }
   }
 

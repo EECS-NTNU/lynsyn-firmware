@@ -60,8 +60,10 @@ private:
   std::map<uint64_t, Addr2Line> addr2lineCache;
 
   QStringList elfFiles;
-  QString symsFile;
   uint64_t prevPc;
+  QStringList kallsyms;
+
+  QMap<QString,QProcess*> elfProcesses;
 
   Addr2Line addr2line;
 
@@ -73,14 +75,14 @@ public:
   ElfSupport() {
     prevPc = -1;
   }
+  ~ElfSupport();
+    
   void addElf(QString elfFile) {
     if(elfFile.trimmed() != "") {
       elfFiles.push_back(elfFile);
     }
   }
-  void addKallsyms(QString symsFile) {
-    this->symsFile = symsFile;
-  }
+  void addKallsyms(QString symsFile);
 
   // get debug info
   QString getFilename(uint64_t pc);
