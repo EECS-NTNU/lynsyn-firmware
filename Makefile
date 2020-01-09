@@ -1,4 +1,21 @@
 ###############################################################################
+#
+# Lynsyn Makefile
+#
+# Compiles all host software and firmware for all Lynsyn boards
+#
+# Usage:
+#    make            Builds all host software
+#    make firmware   Builds firmware
+#    make synthesis  Builds FPGA bitfile (for Lynsyn Original)
+#    make all        Builds everything
+#    make clean      Cleans everything
+#
+# Make sure to adjust settings at the top of this file for your system
+#
+###############################################################################
+
+###############################################################################
 # Settings for the host tools
 
 export QMAKE = qmake CONFIG+=release
@@ -18,6 +35,8 @@ export TOOLCHAIN=/opt/SimplicityStudio_v4/developer/toolchains/gnu_arm/7.2_2017q
 export HW=3
 
 ###############################################################################
+###############################################################################
+# Everything below this should not need any changes
 
 ifeq ($(HW),2)
 alldeps=host_software firmware synthesis
