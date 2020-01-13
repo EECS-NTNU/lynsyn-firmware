@@ -2,11 +2,10 @@
 #
 # Lynsyn Makefile
 #
-# Compiles all host software and firmware for all Lynsyn boards
+# Compiles firmware for all Lynsyn boards
 #
 # Usage:
-#    make            Builds all host software
-#    make firmware   Builds firmware
+#    make            Builds firmware
 #    make synthesis  Builds FPGA bitfile (for Lynsyn Original)
 #    make all        Builds everything
 #    make clean      Cleans everything
@@ -14,11 +13,6 @@
 # Make sure to adjust settings at the top of this file for your system
 #
 ###############################################################################
-
-###############################################################################
-# Settings for the host tools
-
-export QMAKE = qmake CONFIG+=release
 
 ###############################################################################
 # Settings for the firmware
@@ -39,104 +33,43 @@ export HW=3
 # Everything below this should not need any changes
 
 ifeq ($(HW),2)
-alldeps=host_software firmware synthesis
+alldeps=bin/lynsyn_boot.bin bin/lynsyn_main.bin synthesis
 else
-alldeps=host_software firmware
+alldeps=bin/lynsyn_boot.bin bin/lynsyn_main.bin
 endif
-
-ifeq ($(OS),Windows_NT)
-export CFLAGS = -I../../argp-standalone-1.3/ -I/mingw64/include/libusb-1.0/
-export LDFLAGS = -largp -L../../argp-standalone-1.3/
-HOST_EXECUTABLES=bin/lynsyn_tester bin/lynsyn_sampler bin/lynsyn_xsvf bin/lynsyn_viewer
-else
-HOST_EXECUTABLES=bin/lynsyn_tester bin/lynsyn_sampler bin/lynsyn_xvc bin/lynsyn_xsvf bin/lynsyn_viewer
-endif
-
-export CFLAGS += -g -O2 -Wall -I/usr/include/libusb-1.0/ -I../mcu/common/ -I../liblynsyn/ 
-export LDFLAGS += -lusb-1.0 
-export CXXFLAGS = -std=gnu++11 $(CFLAGS)
-
-export CC = gcc
-export CPP = g++
-export LD = g++
-export AR = ar
-export RANLIB = ranlib
-
-###############################################################################
-
-.PHONY: host_software
-host_software: $(HOST_EXECUTABLES)
-	@echo
-	@echo "Host software compilation successful"
-	@echo
-
-.PHONY: bin/lynsyn_tester
-bin/lynsyn_tester:
-	mkdir -p bin
-	cd lynsyn_tester && $(MAKE)
-	cp lynsyn_tester/lynsyn_tester bin
-
-.PHONY: bin/lynsyn_sampler
-bin/lynsyn_sampler:
-	cd lynsyn_sampler && $(MAKE)
-	cp lynsyn_sampler/lynsyn_sampler bin
-
-.PHONY: bin/lynsyn_xvc
-bin/lynsyn_xvc:
-	cd lynsyn_xvc && $(MAKE)
-	cp lynsyn_xvc/lynsyn_xvc bin
-
-.PHONY: bin/lynsyn_xsvf
-bin/lynsyn_xsvf:
-	cd libxsvf && $(MAKE) lynsyn_xsvf
-	cp libxsvf/lynsyn_xsvf bin
-
-.PHONY: bin/lynsyn_viewer
-bin/lynsyn_viewer:
-	mkdir -p lynsyn_viewer/build
-	cd lynsyn_viewer/build && $(QMAKE) ..
-	cd lynsyn_viewer/build && $(MAKE)
-ifeq ($(OS),Windows_NT)
-	cp lynsyn_viewer/build/release/lynsyn_viewer bin
-else
-	cp lynsyn_viewer/build/lynsyn_viewer bin
-endif
-
-###############################################################################
-
-.PHONY: firmware
-firmware: fwbin/lynsyn_boot.bin fwbin/lynsyn_main.bin
-	@echo
-	@echo "Firmware compilation successful"
-	@echo
-
-.PHONY: fwbin/lynsyn_boot.bin
-fwbin/lynsyn_boot.bin:
-	mkdir -p fwbin
-	cd mcu/boot && $(MAKE)
-	cp mcu/boot/lynsyn_boot.bin fwbin
-
-.PHONY: fwbin/lynsyn_main.bin
-fwbin/lynsyn_main.bin:
-	mkdir -p fwbin
-	cd mcu/main && $(MAKE)
-	cp mcu/main/lynsyn_main.bin fwbin
-
-###############################################################################
-
-.PHONY: synthesis
-synthesis:
-	mkdir -p fwbin
-	cd fpga && $(MAKE)
-	cp fpga/build/lynsyn.mcs fwbin
-	@echo
-	@echo "FPGA synthesis successful"
-	@echo
 
 ###############################################################################
 
 .PHONY: all
 all: $(alldeps)
+	@echo
+	@echo "Compilation successful"
+	@echo
+
+###############################################################################
+
+.PHONY: bin/lynsyn_boot.bin
+bin/lynsyn_boot.bin:
+	mkdir -p bin
+	cd mcu/boot && $(MAKE)
+	cp mcu/boot/lynsyn_boot.bin bin
+
+.PHONY: bin/lynsyn_main.bin
+bin/lynsyn_main.bin:
+	mkdir -p bin
+	cd mcu/main && $(MAKE)
+	cp mcu/main/lynsyn_main.bin bin
+
+###############################################################################
+
+.PHONY: synthesis
+synthesis:
+	mkdir -p bin
+	cd fpga && $(MAKE)
+	cp fpga/build/lynsyn.mcs bin
+	@echo
+	@echo "FPGA synthesis successful"
+	@echo
 
 ###############################################################################
 
@@ -158,19 +91,7 @@ install_hw:
 ###############################################################################
 
 .PHONY : clean
-clean : fwclean hostclean
-
-.PHONY : fwclean
-fwclean :
+clean:
 	cd mcu/boot && $(MAKE) clean
 	cd mcu/main && $(MAKE) clean
-
-.PHONY : hostclean
-hostclean:
-	cd lynsyn_tester && $(MAKE) clean
-	cd lynsyn_sampler && $(MAKE) clean
-	cd libxsvf && $(MAKE) clean
-	cd lynsyn_xvc && $(MAKE) clean
-	rm -rf lynsyn_viewer/build
-	cd fpga && $(MAKE) clean
-	rm -rf liblynsyn/*.o bin fwbin
+	rm -rf bin
