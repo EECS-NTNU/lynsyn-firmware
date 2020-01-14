@@ -1,5 +1,0 @@
-(sym_lib_table
-  (lib (name lynsyn-rescue)(type Legacy)(uri ${KIPRJMOD}/lynsyn-rescue.lib)(options "")(descr ""))
-  (lib (name lynsyn)(type Legacy)(uri ${KIPRJMOD}/lynsyn.lib)(options "")(descr ""))
-  (lib (name energymicro-efm32)(type Legacy)(uri ${KIPRJMOD}/energymicro-efm32.lib)(options "")(descr ""))
-)
