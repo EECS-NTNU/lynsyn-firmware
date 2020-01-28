@@ -552,8 +552,6 @@ static int initSent(USB_Status_TypeDef status, uint32_t xf, uint32_t remaining) 
     }
   }
 
-  printf("Cal: %f\n", calInfo.offsetCurrent[0][0]);
-
   calInfo.r[0] = getDouble("r0");
   calInfo.r[1] = getDouble("r1");
   calInfo.r[2] = getDouble("r2");
