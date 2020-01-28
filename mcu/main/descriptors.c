@@ -135,8 +135,8 @@ STATIC_CONST_STRING_DESC_LANGID( langID, 0x04, 0x09 );
 STATIC_CONST_STRING_DESC( iManufacturer, 'N','T','N','U',' ',' ',' ',' ',' ', \
                                          ' ',' ',' ',' ',' ',' ',' ',' ',' ', \
                                          ' ',' ',' ',' ',' ',' ',' ' );
-STATIC_CONST_STRING_DESC( iProduct     , 'L','y','n','s','y','n',' ','V','3', \
-                                         '.','0',' ',' ',' ',' ',' ',' ',' ', \
+STATIC_CONST_STRING_DESC( iProduct     , 'L','y','n','s','y','n',' ',' ',' ', \
+                                         ' ',' ',' ',' ',' ',' ',' ',' ',' ', \
                                          ' ',' ',' ',' ',' ',' ',' ',' ',' ', \
                                          ' ',' ',' ',' ',' ' );
 

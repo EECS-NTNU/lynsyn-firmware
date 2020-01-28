@@ -40,10 +40,6 @@ static struct SampleReplyPacket sample;
 static uint32_t upgradeCrc;
 static uint32_t flashPackageCounter;
 
-static unsigned pointNum[CHANNELS];
-static double lastWanted[CHANNELS];
-static double lastActual[CHANNELS];
-
 uint8_t inBuffer[MAX_PACKET_SIZE + 3];
 
 struct UsbTestReplyPacket usbTestReply __attribute__((__aligned__(4)));
@@ -114,10 +110,6 @@ static void sendBuf(void *outBuffer, int length) {
 ///////////////////////////////////////////////////////////////////////////////
 
 static void sendInitReply(void) {
-  for(int i = 0; i < CHANNELS; i++) {
-    pointNum[i] = 0;
-  }
-
   initReply.hwVersion = getUint32("hwver");
   initReply.swVersion = SW_VERSION;
   initReply.sensors = SENSORS;
@@ -374,149 +366,57 @@ static void getSample(struct GetSampleRequestPacket *getSampleReq) {
   sendBuf(&sample, sizeof(struct SampleReplyPacket));
 }
 
-static void calibrate(struct CalibrateRequestPacket *cal) {
-  int16_t channel[CHANNELS];
-
-  uint32_t channelAvg = 0;
-  for(int i = 0; i < CAL_AVERAGE_SAMPLES; i++) {
-    adcScan(channel);
-    adcScanWait();
-    channelAvg += channel[cal->channel];
-  }
-  channelAvg /= CAL_AVERAGE_SAMPLES;
-        
-  double wanted = cal->calVal / 2.0;
-  double actual = channelAvg;
-
-  double slope = (actual - lastActual[cal->channel]) / (wanted - lastWanted[cal->channel]);
-  double offset = actual - slope * wanted;
-
-  double gain = 1 / slope;
-
-  lastWanted[cal->channel] = wanted;
-  lastActual[cal->channel] = actual;
-
-  if(pointNum[cal->channel] > 0) {
-    printf("Calibrating ADC channel %d (offset %f gain %f) point %d\n", cal->channel, offset, gain, pointNum[cal->channel]);
-
-    char configName[9];
-
-#ifdef VERSION2
-    if(pointNum[cal->channel] == 1) {
-      snprintf(configName, 9, "offset%d", cal->channel);
-      setDouble(configName, offset);
-
-      snprintf(configName, 9, "gain%d", cal->channel);
-      setDouble(configName, gain);
-    }
-
-#else
-    unsigned sensor = 9;
-    char type = 'x';
-
-    switch(cal->channel) {
-      case 0:
-        sensor = 2;
-        type = 'c';
-        break;
-      case 1:
-        sensor = 2;
-        type = 'v';
-        break;
-      case 2:
-        sensor = 1;
-        type = 'c';
-        break;
-      case 3:
-        sensor = 1;
-        type = 'v';
-        break;
-      case 4:
-        sensor = 0;
-        type = 'c';
-        break;
-      case 5:
-        sensor = 0;
-        type = 'v';
-        break;
-    }
-
-    snprintf(configName, 9, "off%c%d%d", type, sensor, pointNum[cal->channel]-1);
-    setDouble(configName, offset);
-
-    snprintf(configName, 9, "gain%c%d%d", type, sensor, pointNum[cal->channel]-1);
-    setDouble(configName, gain);
-
-    snprintf(configName, 9, "point%c%d%d", type, sensor, pointNum[cal->channel]-1);
-    setInt16(configName, (int16_t)channelAvg);
-#endif
-
-  }
-
-  pointNum[cal->channel]++;
-}
-
 static void calSet(struct CalSetRequestPacket *cal) {
-  printf("Setting ADC channel %d (val %f %f)\n", (int)cal->channel, cal->offset, cal->gain);
+  printf("Setting ADC channel %d (val %f %f %d)\n", (int)cal->channel, cal->offset, cal->gain, cal->point);
+
+  char configName[9];
 
 #ifdef VERSION2
+  snprintf(configName, 9, "offset%d", cal->channel);
+  setDouble(configName, cal->offset);
+
+  snprintf(configName, 9, "gain%d", cal->channel);
+  setDouble(configName, cal->gain);
+
+#else
+  unsigned sensor = 9;
+  char type = 'x';
+
   switch(cal->channel) {
     case 0:
-      setDouble("offset0", cal->offset);
-      setDouble("gain0", cal->gain);
+      sensor = 2;
+      type = 'c';
       break;
     case 1:
-      setDouble("offset1", cal->offset);
-      setDouble("gain1", cal->gain);
+      sensor = 2;
+      type = 'v';
       break;
     case 2:
-      setDouble("offset2", cal->offset);
-      setDouble("gain2", cal->gain);
+      sensor = 1;
+      type = 'c';
       break;
     case 3:
-      setDouble("offset3", cal->offset);
-      setDouble("gain3", cal->gain);
+      sensor = 1;
+      type = 'v';
       break;
     case 4:
-      setDouble("offset4", cal->offset);
-      setDouble("gain4", cal->gain);
+      sensor = 0;
+      type = 'c';
       break;
     case 5:
-      setDouble("offset5", cal->offset);
-      setDouble("gain5", cal->gain);
-    case 6:
-      setDouble("offset6", cal->offset);
-      setDouble("gain6", cal->gain);
+      sensor = 0;
+      type = 'v';
       break;
   }
 
-#else
-  switch(cal->channel) {
-    case 0:
-      setDouble("offsetc2", cal->offset);
-      setDouble("gainc2", cal->gain);
-      break;
-    case 1:
-      setDouble("offsetv2", cal->offset);
-      setDouble("gainv2", cal->gain);
-      break;
-    case 2:
-      setDouble("offsetc1", cal->offset);
-      setDouble("gainc1", cal->gain);
-      break;
-    case 3:
-      setDouble("offsetv1", cal->offset);
-      setDouble("gainv1", cal->gain);
-      break;
-    case 4:
-      setDouble("offsetc0", cal->offset);
-      setDouble("gainc0", cal->gain);
-      break;
-    case 5:
-      setDouble("offsetv0", cal->offset);
-      setDouble("gainv0", cal->gain);
-      break;
-  }
+  snprintf(configName, 9, "off%c%d%d", type, sensor, cal->point);
+  setDouble(configName, cal->offset);
+
+  snprintf(configName, 9, "gain%c%d%d", type, sensor, cal->point);
+  setDouble(configName, cal->gain);
+
+  snprintf(configName, 9, "point%c%d%d", type, sensor, cal->point);
+  setInt16(configName, (int16_t)cal->actual);
 #endif
 }
 
@@ -652,6 +552,8 @@ static int initSent(USB_Status_TypeDef status, uint32_t xf, uint32_t remaining) 
     }
   }
 
+  printf("Cal: %f\n", calInfo.offsetCurrent[0][0]);
+
   calInfo.r[0] = getDouble("r0");
   calInfo.r[1] = getDouble("r1");
   calInfo.r[2] = getDouble("r2");
@@ -682,7 +584,6 @@ int UsbDataReceived(USB_Status_TypeDef status, uint32_t xf, uint32_t remaining) 
         case USB_CMD_BREAKPOINT:       currentPacketSize = sizeof(struct BreakpointRequestPacket);      break;
         case USB_CMD_START_SAMPLING:   currentPacketSize = sizeof(struct StartSamplingRequestPacket);   break;
         case USB_CMD_GET_SAMPLE:       currentPacketSize = sizeof(struct GetSampleRequestPacket);       break;
-        case USB_CMD_CAL:              currentPacketSize = sizeof(struct CalibrateRequestPacket);       break;
         case USB_CMD_CAL_SET:          currentPacketSize = sizeof(struct CalSetRequestPacket);          break;
         case USB_CMD_TCK:              currentPacketSize = sizeof(struct SetTckRequestPacket);          break;
         case USB_CMD_SHIFT:            currentPacketSize = sizeof(struct ShiftRequestPacket);           break;
@@ -715,7 +616,6 @@ int UsbDataReceived(USB_Status_TypeDef status, uint32_t xf, uint32_t remaining) 
         case USB_CMD_BREAKPOINT:       setBreakpoint((struct BreakpointRequestPacket *)req);        break;
         case USB_CMD_START_SAMPLING:   startSampling((struct StartSamplingRequestPacket *)req);     break;
         case USB_CMD_GET_SAMPLE:       getSample((struct GetSampleRequestPacket *)req);             break;
-        case USB_CMD_CAL:              calibrate((struct CalibrateRequestPacket *)req);             break;
         case USB_CMD_CAL_SET:          calSet((struct CalSetRequestPacket *)req);                   break;
         case USB_CMD_TCK:              setTck((struct SetTckRequestPacket *)req);                   break;
         case USB_CMD_SHIFT:            shift((struct ShiftRequestPacket *)req);                     break;
