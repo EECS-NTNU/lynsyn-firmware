@@ -407,6 +407,11 @@ bool coreInitA57(unsigned apSel, uint32_t baddr, struct Core *core) {
   return coreInitArmV8(apSel, baddr, core);
 }
 
+bool coreInitA72(unsigned apSel, uint32_t baddr, struct Core *core) {
+  core->core = CORTEX_A72;
+  return coreInitArmV8(apSel, baddr, core);
+}
+
 bool coreInitDenver2(unsigned apSel, uint32_t baddr, struct Core *core) {
   core->core = DENVER_2;
   return coreInitArmV8(apSel, baddr, core);
@@ -426,7 +431,7 @@ bool parseDebugEntry(unsigned apSel, uint32_t compBase) {
     bool done = false;
     uint32_t entryAddr = compBase;
 
-    //printf("  Got ROM at %x\n", (unsigned)compBase);
+    printf("  Got ROM at %x\n", (unsigned)compBase);
 
     while(!done) {
       // read entry
@@ -467,7 +472,7 @@ bool parseDebugEntry(unsigned apSel, uint32_t compBase) {
     uint32_t pidr4;
     if(!dpRead(AP_DRW, &pidr4)) return false;
     
-    //printf("    Got Entry at %x: %x %x %x %x\n", (unsigned)compBase, (unsigned)pidr0, (unsigned)pidr1, (unsigned)pidr2, (unsigned)pidr4);
+    printf("    Got Entry at %x: %x %x %x %x\n", (unsigned)compBase, (unsigned)pidr0, (unsigned)pidr1, (unsigned)pidr2, (unsigned)pidr4);
 
     /* if(((pidr0 & 0xff) == 0x15) && // found a Cortex R5 */
     /*    ((pidr1 & 0xff) == 0xbc) && */
@@ -517,6 +522,18 @@ bool parseDebugEntry(unsigned apSel, uint32_t compBase) {
 
       numCores++;
 
+    } else if(((pidr0 & 0xff) == 0x8) && // found a Cortex A72
+             ((pidr1 & 0xff) == 0xbd) &&
+             ((pidr2 & 0x0f) == 0xb) &&
+             ((pidr4 & 0x0f) == 0x4)) {
+
+      printf("      Found Cortex A72\n");
+
+      if(!coreInitA72(apSel, compBase, &cores[numCores])) return false;
+      if(cores[numCores].enabled) numEnabledCores++;
+
+      numCores++;
+
     /* } else if(((pidr0 & 0xff) == 0x2) && // found a Denver 2 */
     /*          ((pidr1 & 0xff) == 0xb3) && */
     /*          ((pidr2 & 0x0f) == 0xe) && */
@@ -553,7 +570,7 @@ bool armInitCores(struct JtagDevice *devlist) {
       if(!apRead(i, AP_CFG, &cfg)) return false;
       
       if((idr & 0x0fffff0f) == IDR_APB_AP) {
-        //printf("Found APB AP (%d) idr %x base %x cfg %x\n", i, (unsigned)idr, (unsigned)base, (unsigned)cfg);
+        printf("Found APB AP (%d) idr %x base %x cfg %x\n", i, (unsigned)idr, (unsigned)base, (unsigned)cfg);
 
         if(base == ~0) { // legacy format, not present
           
@@ -567,7 +584,7 @@ bool armInitCores(struct JtagDevice *devlist) {
         }
 
       } else if((idr & 0x0fffff0f) == IDR_AXI_AP) {
-        //printf("Found AXI AP (%d) idr %x base %x cfg %x\n", i, (unsigned)idr, (unsigned)base, (unsigned)cfg);
+        printf("Found AXI AP (%d) idr %x base %x cfg %x\n", i, (unsigned)idr, (unsigned)base, (unsigned)cfg);
 
         apSelMem = i;
         mem64 = cfg & 2;
@@ -576,13 +593,13 @@ bool armInitCores(struct JtagDevice *devlist) {
         }
 
       } else if((idr & 0x0fffff0f) == IDR_AHB_AP) {
-        //printf("Found AHB AP (%d)\n", i);
+        printf("Found AHB AP (%d)\n", i);
 
         apSelMem = i;
         mem64 = false;
 
       } else if(idr != 0) {
-        //printf("Found unknown AP %x (%d)\n", (unsigned)idr, i);
+        printf("Found unknown AP %x (%d)\n", (unsigned)idr, i);
       }
     }
   }

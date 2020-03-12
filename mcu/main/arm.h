@@ -23,6 +23,7 @@ enum {
   CORTEX_A9,
   CORTEX_A53,
   CORTEX_A57,
+  CORTEX_A72,
   DENVER_2
 };
 
