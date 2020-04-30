@@ -19,4 +19,6 @@
 void usbInit(void);
 bool sendSamples(struct SampleReplyPacket *sample, unsigned n);
 
+extern struct LogReplyPacket logReply __attribute__((__aligned__(4)));
+
 #endif

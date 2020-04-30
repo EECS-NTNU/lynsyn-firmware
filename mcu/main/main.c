@@ -244,3 +244,17 @@ void getCurrentAvg(int16_t *sampleBuffer) {
     continuousSamplesSinceLast[i] = 0;
   }
 }
+
+void clearLog(void) {
+  logReply.buf[0] = 0;
+  logReply.size = 1;
+}
+
+void addLogLine(const char *fmt, ...) {
+  if(logReply.size < MAX_LOG_SIZE) {
+    va_list args;
+    va_start(args, fmt);
+    logReply.size += vsnprintf(logReply.buf + logReply.size - 1, MAX_LOG_SIZE - logReply.size, fmt, args);
+    va_end(args);
+  }
+}

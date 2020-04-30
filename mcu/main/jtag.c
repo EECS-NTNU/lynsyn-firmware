@@ -452,7 +452,7 @@ static bool jtagQueryChain(struct JtagDevice *devlist) {
   numDevices = getNumDevices();
 
   if((numDevices == 0) || (numDevices == MAX_JTAG_DEVICES)) {
-    printf("No JTAG chain found\n");
+    addLogLine("No JTAG chain found\n");
     return false;
 
   } else {
@@ -465,7 +465,7 @@ static bool jtagQueryChain(struct JtagDevice *devlist) {
         dev.irlen = getIrLen(dev.idcode, devlist);
         if(!dev.irlen) return false;
         devices[i] = dev;
-        printf("Device %d: idcode %x\n", i, (int)devices[i].idcode);
+        addLogLine("Device %d: idcode %x\n", i, (int)devices[i].idcode);
       } else {
         numDevices = i;
         break;
@@ -689,11 +689,10 @@ bool jtagInit(struct JtagDevice *devlist) {
     }
 
     if(!found) {
-      //printf("TAP not found\n");
+      addLogLine("TAP not found\n");
       return false;
     }
   }
 
   return true;
 }
-

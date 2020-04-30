@@ -50,6 +50,7 @@ struct TestReplyPacket testReply __attribute__((__aligned__(4)));
 struct TckReplyPacket tckReply __attribute__((__aligned__(4)));
 struct ShiftReplyPacket shiftReply __attribute__((__aligned__(4)));
 struct JtagInitReplyPacket jtagReply __attribute__((__aligned__(4)));
+struct LogReplyPacket logReply __attribute__((__aligned__(4)));
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -262,10 +263,16 @@ static void initJtag(struct JtagInitRequestPacket *jtagInitRequest) {
 #ifdef VERSION2
   jtagInt();
 #endif
+  clearLog();
   jtagReply.success = jtagInit(jtagInitRequest->jtagDevices);
   if(jtagReply.success) jtagReply.success = armInitCores(jtagInitRequest->armDevices);
   if(jtagReply.success) jtagReply.numCores = numCores;
   sendBuf(&jtagReply, sizeof(struct JtagInitReplyPacket));
+  printf("%s\n", logReply.buf);
+}
+
+static void getLog() {
+  sendBuf(&logReply, sizeof(struct LogReplyPacket));
 }
 
 static void setBreakpoint(struct BreakpointRequestPacket *bpReq) {
@@ -589,6 +596,7 @@ int UsbDataReceived(USB_Status_TypeDef status, uint32_t xf, uint32_t remaining) 
         case USB_CMD_SHIFT:            currentPacketSize = sizeof(struct ShiftRequestPacket);           break;
         case USB_CMD_TRST:             currentPacketSize = sizeof(struct TrstRequestPacket);            break;
         case USB_CMD_TEST:             currentPacketSize = sizeof(struct TestRequestPacket);            break;
+        case USB_CMD_LOG:              currentPacketSize = sizeof(struct RequestPacket);                break;
         default: {
           printf("USB error %x\n", (unsigned)req->cmd);
 #ifndef __linux__
@@ -621,6 +629,7 @@ int UsbDataReceived(USB_Status_TypeDef status, uint32_t xf, uint32_t remaining) 
         case USB_CMD_SHIFT:            shift((struct ShiftRequestPacket *)req);                     break;
         case USB_CMD_TRST:             trst((struct TrstRequestPacket *)req);                       break;
         case USB_CMD_TEST:             testProcedure((struct TestRequestPacket *)req);              break;
+        case USB_CMD_LOG:              getLog();                                                    break;
       }          
 
       xf -= currentPacketSize;

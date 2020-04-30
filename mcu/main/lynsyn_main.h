@@ -39,6 +39,8 @@
 void panic(const char *fmt, ...);
 int64_t calculateTime();
 void getCurrentAvg(int16_t *sampleBuffer);
+void clearLog(void);
+void addLogLine(const char *fmt, ...);
 
 ///////////////////////////////////////////////////////////////////////////////
 // global variables

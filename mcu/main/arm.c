@@ -355,7 +355,7 @@ bool coreHalted(unsigned core, bool *value) {
 }
 
 bool coreInitArmV7(unsigned apSel, uint32_t baddr, struct Core *core) {
-  printf("      Found ARMv7 core\n");
+  addLogLine("      Found ARMv7 core\n");
 
   core->type = ARMV7A;
   core->ap = apSel;
@@ -366,7 +366,7 @@ bool coreInitArmV7(unsigned apSel, uint32_t baddr, struct Core *core) {
 }
 
 bool coreInitArmV8(unsigned apSel, uint32_t baddr, struct Core *core) {
-  printf("      Found ARMv8 core: ");
+  addLogLine("      Found ARMv8 core: ");
 
   core->type = ARMV8A;
   core->ap = apSel;
@@ -376,7 +376,7 @@ bool coreInitArmV8(unsigned apSel, uint32_t baddr, struct Core *core) {
   core->enabled = prsr & 1;
 
   if(core->enabled) {
-    printf("Enabled\n");
+    addLogLine("Enabled\n");
     
     /* enable CTI */
     if(!coreWriteReg(core, ARMV8A_CTICONTROL, 1)) return false;
@@ -394,7 +394,7 @@ bool coreInitArmV8(unsigned apSel, uint32_t baddr, struct Core *core) {
     if(!coreWriteReg(core, ARMV8A_CTIOUTEN(RESTART_EVENT), CHANNEL_0)) return false;
     
   } else {
-    printf("Disabled\n");
+    addLogLine("Disabled\n");
   }
 
   return true;
@@ -414,7 +414,7 @@ bool parseDebugEntry(unsigned apSel, uint32_t compBase, struct ArmDevice *armLis
     bool done = false;
     uint32_t entryAddr = compBase;
 
-    printf("  Got ROM at %x\n", (unsigned)compBase);
+    addLogLine("  Got ROM at %x\n", (unsigned)compBase);
 
     while(!done) {
       // read entry
@@ -453,7 +453,7 @@ bool parseDebugEntry(unsigned apSel, uint32_t compBase, struct ArmDevice *armLis
     if(!apWrite(apSel, AP_TAR, addr[4])) return false;
     if(!dpRead(AP_DRW, &pidr[4])) return false;
     
-    printf("    Got Entry at %x: %x %x %x %x\n", (unsigned)compBase, (unsigned)pidr[0], (unsigned)pidr[1], (unsigned)pidr[2], (unsigned)pidr[4]);
+    addLogLine("    Got Entry at %x: %x %x %x %x\n", (unsigned)compBase, (unsigned)pidr[0], (unsigned)pidr[1], (unsigned)pidr[2], (unsigned)pidr[4]);
 
     for(int deviceNum = 0; deviceNum < SIZE_ARM_DEVICE_LIST; deviceNum++) {
       if(armList[deviceNum].type == DEVICELIST_END) {
@@ -509,7 +509,7 @@ bool armInitCores(struct ArmDevice *armList) {
       if(!apRead(i, AP_CFG, &cfg)) return false;
       
       if((idr & 0x0fffff0f) == IDR_APB_AP) {
-        printf("Found APB AP (%d) idr %x base %x cfg %x\n", i, (unsigned)idr, (unsigned)base, (unsigned)cfg);
+        addLogLine("Found APB AP (%d) idr %x base %x cfg %x\n", i, (unsigned)idr, (unsigned)base, (unsigned)cfg);
 
         if(base == ~0) { // legacy format, not present
           
@@ -523,28 +523,28 @@ bool armInitCores(struct ArmDevice *armList) {
         }
 
       } else if((idr & 0x0fffff0f) == IDR_AXI_AP) {
-        printf("Found AXI AP (%d) idr %x base %x cfg %x\n", i, (unsigned)idr, (unsigned)base, (unsigned)cfg);
+        addLogLine("Found AXI AP (%d) idr %x base %x cfg %x\n", i, (unsigned)idr, (unsigned)base, (unsigned)cfg);
 
         apSelMem = i;
         mem64 = cfg & 2;
         if(mem64) {
-          //printf("  64 bit AXI memory space\n");
+          addLogLine("  64 bit AXI memory space\n");
         }
 
       } else if((idr & 0x0fffff0f) == IDR_AHB_AP) {
-        printf("Found AHB AP (%d)\n", i);
+        addLogLine("Found AHB AP (%d)\n", i);
 
         apSelMem = i;
         mem64 = false;
 
       } else if(idr != 0) {
-        printf("Found unknown AP %x (%d)\n", (unsigned)idr, i);
+        addLogLine("Found unknown AP %x (%d)\n", (unsigned)idr, i);
       }
     }
   }
 
   if(numCores == 0) {
-    //printf("No cores found\n");
+    addLogLine("No cores found\n");
     return false;
   }
 
