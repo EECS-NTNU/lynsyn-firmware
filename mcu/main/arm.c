@@ -13,6 +13,7 @@
 
 #include "arm.h"
 #include "jtag.h"
+#include "../common/usbprotocol.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -353,18 +354,20 @@ bool coreHalted(unsigned core, bool *value) {
   return true;
 }
 
-bool coreInitA9(unsigned apSel, uint32_t baddr, struct Core *core) {
+bool coreInitArmV7(unsigned apSel, uint32_t baddr, struct Core *core) {
+  printf("      Found ARMv7 core\n");
+
   core->type = ARMV7A;
-  core->core = CORTEX_A9;
   core->ap = apSel;
   core->baddr = baddr;
   core->enabled = true;
-  //printf("        Enabled\n");
 
   return true;
 }
 
 bool coreInitArmV8(unsigned apSel, uint32_t baddr, struct Core *core) {
+  printf("      Found ARMv8 core: ");
+
   core->type = ARMV8A;
   core->ap = apSel;
   core->baddr = baddr;
@@ -373,7 +376,7 @@ bool coreInitArmV8(unsigned apSel, uint32_t baddr, struct Core *core) {
   core->enabled = prsr & 1;
 
   if(core->enabled) {
-    //printf("        Enabled\n");
+    printf("Enabled\n");
     
     /* enable CTI */
     if(!coreWriteReg(core, ARMV8A_CTICONTROL, 1)) return false;
@@ -391,35 +394,15 @@ bool coreInitArmV8(unsigned apSel, uint32_t baddr, struct Core *core) {
     if(!coreWriteReg(core, ARMV8A_CTIOUTEN(RESTART_EVENT), CHANNEL_0)) return false;
     
   } else {
-    //printf("        Disabled\n");
+    printf("Disabled\n");
   }
 
   return true;
 }
 
-bool coreInitA53(unsigned apSel, uint32_t baddr, struct Core *core) {
-  core->core = CORTEX_A53;
-  return coreInitArmV8(apSel, baddr, core);
-}
-
-bool coreInitA57(unsigned apSel, uint32_t baddr, struct Core *core) {
-  core->core = CORTEX_A57;
-  return coreInitArmV8(apSel, baddr, core);
-}
-
-bool coreInitA72(unsigned apSel, uint32_t baddr, struct Core *core) {
-  core->core = CORTEX_A72;
-  return coreInitArmV8(apSel, baddr, core);
-}
-
-bool coreInitDenver2(unsigned apSel, uint32_t baddr, struct Core *core) {
-  core->core = DENVER_2;
-  return coreInitArmV8(apSel, baddr, core);
-}
-
 ///////////////////////////////////////////////////////////////////////////////
 
-bool parseDebugEntry(unsigned apSel, uint32_t compBase) {
+bool parseDebugEntry(unsigned apSel, uint32_t compBase, struct ArmDevice *armList) {
   
   // read CIDR1
   uint32_t addr = compBase + 0xff4;
@@ -443,7 +426,7 @@ bool parseDebugEntry(unsigned apSel, uint32_t compBase) {
 
       // else
       if(entry & 1) { // entry is valid
-        if(!parseDebugEntry(apSel, compBase + (entry & 0xfffff000))) return false;
+        if(!parseDebugEntry(apSel, compBase + (entry & 0xfffff000), armList)) return false;
       }
 
       entryAddr += 4;
@@ -451,109 +434,65 @@ bool parseDebugEntry(unsigned apSel, uint32_t compBase) {
 
   } else if((cidr1 & 0xf0) == 0x90) { // is debug component
     // read PIDR
+    uint32_t addr[5];
+    uint32_t pidr[5];
 
-    uint32_t addr0 = compBase + 0xfe0;
-    if(!apWrite(apSel, AP_TAR, addr0)) return false;
-    uint32_t pidr0;
-    if(!dpRead(AP_DRW, &pidr0)) return false;
+    addr[0] = compBase + 0xfe0;
+    if(!apWrite(apSel, AP_TAR, addr[0])) return false;
+    if(!dpRead(AP_DRW, &pidr[0])) return false;
     
-    uint32_t addr1 = compBase + 0xfe4;
-    if(!apWrite(apSel, AP_TAR, addr1)) return false;
-    uint32_t pidr1;
-    if(!dpRead(AP_DRW, &pidr1)) return false;
+    addr[1] = compBase + 0xfe4;
+    if(!apWrite(apSel, AP_TAR, addr[1])) return false;
+    if(!dpRead(AP_DRW, &pidr[1])) return false;
     
-    uint32_t addr2 = compBase + 0xfe8;
-    if(!apWrite(apSel, AP_TAR, addr2)) return false;
-    uint32_t pidr2;
-    if(!dpRead(AP_DRW, &pidr2)) return false;
+    addr[2] = compBase + 0xfe8;
+    if(!apWrite(apSel, AP_TAR, addr[2])) return false;
+    if(!dpRead(AP_DRW, &pidr[2])) return false;
     
-    uint32_t addr4 = compBase + 0xfd0;
-    if(!apWrite(apSel, AP_TAR, addr4)) return false;
-    uint32_t pidr4;
-    if(!dpRead(AP_DRW, &pidr4)) return false;
+    addr[4] = compBase + 0xfd0;
+    if(!apWrite(apSel, AP_TAR, addr[4])) return false;
+    if(!dpRead(AP_DRW, &pidr[4])) return false;
     
-    printf("    Got Entry at %x: %x %x %x %x\n", (unsigned)compBase, (unsigned)pidr0, (unsigned)pidr1, (unsigned)pidr2, (unsigned)pidr4);
+    printf("    Got Entry at %x: %x %x %x %x\n", (unsigned)compBase, (unsigned)pidr[0], (unsigned)pidr[1], (unsigned)pidr[2], (unsigned)pidr[4]);
 
-    /* if(((pidr0 & 0xff) == 0x15) && // found a Cortex R5 */
-    /*    ((pidr1 & 0xff) == 0xbc) && */
-    /*    ((pidr2 & 0x0f) == 0xb) && */
-    /*    ((pidr4 & 0x0f) == 0x4)) { */
+    for(int deviceNum = 0; deviceNum < SIZE_ARM_DEVICE_LIST; deviceNum++) {
+      if(armList[deviceNum].type == DEVICELIST_END) {
+        break;
 
-    /*   cores[numCores] = coreInitR5(apSel, compBase); */
-    /*   if(cores[numCores].enabled) numEnabledCores++; */
+      } else {
+        bool pidrMatch = true;
 
-    /*   numCores++; */
+        for(int pidrnum = 0; pidrnum < 5; pidrnum++) {
+          uint32_t mask = armList[deviceNum].pidrmask[pidrnum];
+          if((pidr[pidrnum] & mask) != (armList[deviceNum].pidr[pidrnum] & mask)) {
+            pidrMatch = false;
+          }
+        }
 
-    /* } else */
-
-    if(((pidr0 & 0xff) == 0x9) && // found a Cortex A9
-       ((pidr1 & 0xff) == 0xbc) &&
-       ((pidr2 & 0x0f) == 0xb) &&
-       ((pidr4 & 0x0f) == 0x4)) {
-
-      printf("      Found Cortex A9\n");
-
-      if(!coreInitA9(apSel, compBase, &cores[numCores])) return false;
-      if(cores[numCores].enabled) numEnabledCores++;
-
-      numCores++;
-
-    } else if(((pidr0 & 0xff) == 0x3) && // found a Cortex A53
-             ((pidr1 & 0xff) == 0xbd) &&
-             ((pidr2 & 0x0f) == 0xb) &&
-             ((pidr4 & 0x0f) == 0x4)) {
-
-      printf("      Found Cortex A53\n");
-
-      if(!coreInitA53(apSel, compBase, &cores[numCores])) return false;
-      if(cores[numCores].enabled) numEnabledCores++;
-
-      numCores++;
-
-    } else if(((pidr0 & 0xff) == 0x7) && // found a Cortex A57
-             ((pidr1 & 0xff) == 0xbd) &&
-             ((pidr2 & 0x0f) == 0xb) &&
-             ((pidr4 & 0x0f) == 0x4)) {
-
-      printf("      Found Cortex A57\n");
-
-      if(!coreInitA57(apSel, compBase, &cores[numCores])) return false;
-      if(cores[numCores].enabled) numEnabledCores++;
-
-      numCores++;
-
-    } else if(((pidr0 & 0xff) == 0x8) && // found a Cortex A72
-             ((pidr1 & 0xff) == 0xbd) &&
-             ((pidr2 & 0x0f) == 0xb) &&
-             ((pidr4 & 0x0f) == 0x4)) {
-
-      printf("      Found Cortex A72\n");
-
-      if(!coreInitA72(apSel, compBase, &cores[numCores])) return false;
-      if(cores[numCores].enabled) numEnabledCores++;
-
-      numCores++;
-
-    /* } else if(((pidr0 & 0xff) == 0x2) && // found a Denver 2 */
-    /*          ((pidr1 & 0xff) == 0xb3) && */
-    /*          ((pidr2 & 0x0f) == 0xe) && */
-    /*          ((pidr4 & 0x0f) == 0x3)) { */
-
-    /*   printf("      Found Denver 2\n"); */
-
-    /*   if(!coreInitDenver2(apSel, compBase, &cores[numCores])) return false; */
-    /*   if(cores[numCores].enabled) numEnabledCores++; */
-
-    /*   numCores++; */
+        if(pidrMatch) {
+          switch(armList[deviceNum].type) {
+            case ARMV7: {
+              if(!coreInitArmV7(apSel, compBase, &cores[numCores])) return false;
+              if(cores[numCores].enabled) numEnabledCores++;
+              numCores++;
+              break;
+            }
+            case ARMV8: {
+              if(!coreInitArmV8(apSel, compBase, &cores[numCores])) return false;
+              if(cores[numCores].enabled) numEnabledCores++;
+              numCores++;
+              break;
+            }
+          }
+        }
+      }
     }
   }
 
   return true;
 }
 
-bool armInitCores(struct JtagDevice *devlist) {
-
-  if(!jtagInit(devlist)) return false;
+bool armInitCores(struct ArmDevice *armList) {
 
   if(!dpInit()) return false;
 
@@ -576,11 +515,11 @@ bool armInitCores(struct JtagDevice *devlist) {
           
         } else if((base & 0x3) == 0) { // legacy format, present
           if(!apWrite(i, AP_CSW, 0x80000042)) return false;
-          if(!parseDebugEntry(i, base & 0xfffff000)) return false;
+          if(!parseDebugEntry(i, base & 0xfffff000, armList)) return false;
           
         } else if((base & 0x3) == 0x3) { // debug entry is present
           if(!apWrite(i, AP_CSW, 0x80000042)) return false;
-          if(!parseDebugEntry(i, base & 0xfffff000)) return false;
+          if(!parseDebugEntry(i, base & 0xfffff000, armList)) return false;
         }
 
       } else if((idr & 0x0fffff0f) == IDR_AXI_AP) {

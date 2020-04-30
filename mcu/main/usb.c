@@ -16,6 +16,7 @@
 #include "usb.h"
 #include "adc.h"
 #include "config.h"
+#include "jtag.h"
 #include "arm.h"
 #include "jtag_lowlevel.h"
 #include "../common/usbprotocol.h"
@@ -261,8 +262,9 @@ static void initJtag(struct JtagInitRequestPacket *jtagInitRequest) {
 #ifdef VERSION2
   jtagInt();
 #endif
-  jtagReply.success = armInitCores(jtagInitRequest->devices);
-  jtagReply.numCores = numCores;
+  jtagReply.success = jtagInit(jtagInitRequest->jtagDevices);
+  if(jtagReply.success) jtagReply.success = armInitCores(jtagInitRequest->armDevices);
+  if(jtagReply.success) jtagReply.numCores = numCores;
   sendBuf(&jtagReply, sizeof(struct JtagInitReplyPacket));
 }
 

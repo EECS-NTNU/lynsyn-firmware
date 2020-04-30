@@ -19,17 +19,8 @@ enum {
   ARMV8A
 };
 
-enum {
-  CORTEX_A9,
-  CORTEX_A53,
-  CORTEX_A57,
-  CORTEX_A72,
-  DENVER_2
-};
-
 struct Core {
   unsigned type;
-  unsigned core;
   unsigned ap;
   uint32_t baddr;
   bool enabled;
@@ -38,7 +29,8 @@ struct Core {
 ///////////////////////////////////////////////////////////////////////////////
 // public functions
 
-bool armInitCores(struct JtagDevice *devices); // call this at least every time a new board has been plugged in
+// call this at least every time a new board has been plugged in
+bool armInitCores(struct ArmDevice *armList); 
 
 void coreReadPcsrInit(uint64_t cores);
 bool coreReadPcsrFast(uint64_t *pcs, bool *halted);
