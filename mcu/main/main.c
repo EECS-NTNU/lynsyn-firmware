@@ -118,7 +118,6 @@ int main(void) {
 
       {
         samplePtr->time = currentTime;
-
         adcScan(samplePtr->channel);
         if(samplePc) {
           sampleOk = coreReadPcsrFast(samplePtr->pc, &halted);

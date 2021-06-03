@@ -28,5 +28,6 @@ void setInt16(char *id, int16_t val);
 void setUint32(char *id, uint32_t val);
 void setDouble(char *id, double val);
 void setString(char *id, char *s);
+void printConfigMem(void);
 
 #endif

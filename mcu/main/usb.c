@@ -137,21 +137,21 @@ static void hwInit(struct HwInitRequestPacket *hwInitReq) {
   setUint32("hwver", hwInitReq->hwVersion);
 
 #ifdef VERSION2
-  setDouble("offset0", 0);
-  setDouble("offset1", 0);
-  setDouble("offset2", 0);
-  setDouble("offset3", 0);
-  setDouble("offset4", 0);
-  setDouble("offset5", 0);
-  setDouble("offset6", 0);
+  setDouble("offc00", 0);
+  setDouble("offc10", 0);
+  setDouble("offc20", 0);
+  setDouble("offc30", 0);
+  setDouble("offc40", 0);
+  setDouble("offc50", 0);
+  setDouble("offc60", 0);
 
-  setDouble("gain0", 1);
-  setDouble("gain1", 1);
-  setDouble("gain2", 1);
-  setDouble("gain3", 1);
-  setDouble("gain4", 1);
-  setDouble("gain5", 1);
-  setDouble("gain6", 1);
+  setDouble("gainc00", 1);
+  setDouble("gainc10", 1);
+  setDouble("gainc20", 1);
+  setDouble("gainc30", 1);
+  setDouble("gainc40", 1);
+  setDouble("gainc50", 1);
+  setDouble("gainc60", 1);
 
   setDouble("r0", hwInitReq->r[0]);
   setDouble("r1", hwInitReq->r[1]);
@@ -380,17 +380,13 @@ static void calSet(struct CalSetRequestPacket *cal) {
 
   char configName[9];
 
-#ifdef VERSION2
-  snprintf(configName, 9, "offset%d", cal->channel);
-  setDouble(configName, cal->offset);
-
-  snprintf(configName, 9, "gain%d", cal->channel);
-  setDouble(configName, cal->gain);
-
-#else
   unsigned sensor = 9;
   char type = 'x';
 
+#ifdef VERSION2
+  sensor = cal->channel;
+  type = 'c';
+#else
   switch(cal->channel) {
     case 0:
       sensor = 2;
@@ -417,6 +413,7 @@ static void calSet(struct CalSetRequestPacket *cal) {
       type = 'v';
       break;
   }
+#endif
 
   snprintf(configName, 9, "off%c%d%d", type, sensor, cal->point);
   setDouble(configName, cal->offset);
@@ -426,7 +423,6 @@ static void calSet(struct CalSetRequestPacket *cal) {
 
   snprintf(configName, 9, "point%c%d%d", type, sensor, cal->point);
   setInt16(configName, (int16_t)cal->actual);
-#endif
 }
 
 static void testProcedure(struct TestRequestPacket *testReq) {
@@ -475,50 +471,9 @@ static int usbDataSent(USB_Status_TypeDef status, uint32_t xf, uint32_t remainin
 static int initSent(USB_Status_TypeDef status, uint32_t xf, uint32_t remaining) {
   (void)remaining;
 
-#ifdef VERSION2
-  calInfo.currentPoints[0] = 1;
-  calInfo.currentPoints[1] = 1;
-  calInfo.currentPoints[2] = 1;
-  calInfo.currentPoints[3] = 1;
-  calInfo.currentPoints[4] = 1;
-  calInfo.currentPoints[5] = 1;
-  calInfo.currentPoints[6] = 1;
-
-  calInfo.offsetCurrent[0][0] = getDouble("offset0");
-  calInfo.offsetCurrent[1][0] = getDouble("offset1");
-  calInfo.offsetCurrent[2][0] = getDouble("offset2");
-  calInfo.offsetCurrent[3][0] = getDouble("offset3");
-  calInfo.offsetCurrent[4][0] = getDouble("offset4");
-  calInfo.offsetCurrent[5][0] = getDouble("offset5");
-  calInfo.offsetCurrent[6][0] = getDouble("offset6");
-
-  calInfo.gainCurrent[0][0] = getDouble("gain0");
-  calInfo.gainCurrent[1][0] = getDouble("gain1");
-  calInfo.gainCurrent[2][0] = getDouble("gain2");
-  calInfo.gainCurrent[3][0] = getDouble("gain3");
-  calInfo.gainCurrent[4][0] = getDouble("gain4");
-  calInfo.gainCurrent[5][0] = getDouble("gain5");
-  calInfo.gainCurrent[6][0] = getDouble("gain6");
-
-  calInfo.pointCurrent[0][0] = 0;
-  calInfo.pointCurrent[1][0] = 0;
-  calInfo.pointCurrent[2][0] = 0;
-  calInfo.pointCurrent[3][0] = 0;
-  calInfo.pointCurrent[4][0] = 0;
-  calInfo.pointCurrent[5][0] = 0;
-  calInfo.pointCurrent[6][0] = 0;
-
-  if(configExists("r0")) calInfo.r[0] = getDouble("r0"); else calInfo.r[0] = 0.025;
-  if(configExists("r1")) calInfo.r[1] = getDouble("r1"); else calInfo.r[1] = 0.05;
-  if(configExists("r2")) calInfo.r[2] = getDouble("r2"); else calInfo.r[2] = 0.05;
-  if(configExists("r3")) calInfo.r[3] = getDouble("r3"); else calInfo.r[3] = 0.1;
-  if(configExists("r4")) calInfo.r[4] = getDouble("r4"); else calInfo.r[4] = 0.1;
-  if(configExists("r5")) calInfo.r[5] = getDouble("r5"); else calInfo.r[5] = 1;
-  if(configExists("r6")) calInfo.r[6] = getDouble("r6"); else calInfo.r[6] = 10;
-  
-#else
   char configName[9];
 
+#ifdef VERSION2
   for(int sensor = 0; sensor < MAX_SENSORS; sensor++) {
     calInfo.currentPoints[sensor] = 0;
     calInfo.voltagePoints[sensor] = 0;
@@ -537,6 +492,45 @@ static int initSent(USB_Status_TypeDef status, uint32_t xf, uint32_t remaining) 
         calInfo.currentPoints[sensor]++;
       } else {
         calInfo.offsetCurrent[sensor][pointNum] = 0;
+        calInfo.gainCurrent[sensor][pointNum] = 1;
+        break;
+      }
+    }
+
+    for(int pointNum = 0; pointNum < MAX_POINTS; pointNum++) {
+      calInfo.offsetVoltage[sensor][pointNum] = 0;
+      calInfo.gainVoltage[sensor][pointNum] = 1;
+    }
+  }
+
+  calInfo.r[0] = getDouble("r0");
+  calInfo.r[1] = getDouble("r1");
+  calInfo.r[2] = getDouble("r2");
+  calInfo.r[3] = getDouble("r3");
+  calInfo.r[4] = getDouble("r4");
+  calInfo.r[5] = getDouble("r5");
+  calInfo.r[6] = getDouble("r6");
+  
+#else
+  for(int sensor = 0; sensor < MAX_SENSORS; sensor++) {
+    calInfo.currentPoints[sensor] = 0;
+    calInfo.voltagePoints[sensor] = 0;
+
+    for(int pointNum = 0; pointNum < MAX_POINTS; pointNum++) {
+      snprintf(configName, 9, "offc%d%d", sensor, pointNum);
+      if(configExists(configName)) {
+        calInfo.offsetCurrent[sensor][pointNum] = getDouble(configName);
+
+        snprintf(configName, 9, "gainc%d%d", sensor, pointNum);
+        calInfo.gainCurrent[sensor][pointNum] = getDouble(configName);
+      
+        snprintf(configName, 9, "pointc%d%d", sensor, pointNum);
+        calInfo.pointCurrent[sensor][pointNum] = getInt16(configName);
+
+        calInfo.currentPoints[sensor]++;
+      } else {
+        calInfo.offsetCurrent[sensor][pointNum] = 0;
+        calInfo.gainCurrent[sensor][pointNum] = 1;
         break;
       }
     }
@@ -555,6 +549,7 @@ static int initSent(USB_Status_TypeDef status, uint32_t xf, uint32_t remaining) 
         calInfo.voltagePoints[sensor]++;
       } else {
         calInfo.offsetVoltage[sensor][pointNum] = 0;
+        calInfo.gainVoltage[sensor][pointNum] = 1;
         break;
       }
 

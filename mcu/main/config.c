@@ -55,6 +55,17 @@ void configInit(void) {
   }
 }
 
+void printConfigMem(void) {
+  printf("Config MEM:\n");
+  for(int i = 1; i < CONFIG_LINES; i++) {
+    if(configMem[i].id[0]) {
+      printf("  %s\n", configMem[i].id);
+    } else {
+      printf("  <empty>\n");
+    }
+  }
+}
+
 static struct configLine *getLine(char *id) {
   for(int i = 1; i < CONFIG_LINES; i++) {
     if(!strncmp(configMem[i].id, id, 8)) {
